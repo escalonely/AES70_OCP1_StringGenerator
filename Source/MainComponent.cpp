@@ -31,6 +31,32 @@ SOFTWARE.
 
 MainComponent::MainComponent()
 {
+    m_ocaClassComboBox = std::make_unique<juce::ComboBox>("OCA class");
+    m_ocaClassComboBox->setHasFocusOutline(true);
+
+    m_ocaClassComboBox->addItemList({
+        "OcaRoot",
+        " +-OcaWorker",
+        " |  +-OcaBlock",
+        " |  +-OcaActuator",
+        " |  |   +-OcaSwitch",
+        " |  |   +-OcaMute",
+        " |  +-OcaSensor",
+        " |  |   +-OcaBooleanSensor",
+        " +-OcaAgent",
+        }, 1);
+
+    m_ocaClassComboBox->onChange = [=]()
+    {
+        int classIdx = m_ocaClassComboBox->getSelectedId();
+        switch (classIdx)
+        {
+        default:
+            break;
+        }
+    };
+
+    addAndMakeVisible(m_ocaClassComboBox.get());
     setSize (600, 400);
 }
 
@@ -45,12 +71,13 @@ void MainComponent::paint (juce::Graphics& g)
 
     g.setFont (juce::Font (16.0f));
     g.setColour (juce::Colours::white);
-    g.drawText ("Hello World!", getLocalBounds(), juce::Justification::centred, true);
+    g.drawText ("AES70 OCP.1 binary string generator", getLocalBounds(), juce::Justification::topLeft, true);
 }
 
 void MainComponent::resized()
 {
-    // This is called when the MainComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    auto margin = 2;
+    auto bounds = getLocalBounds();
+    auto ocaClassComboBoxBounds = bounds.removeFromTop(50);
+    m_ocaClassComboBox->setBounds(ocaClassComboBoxBounds.reduced(margin));
 }

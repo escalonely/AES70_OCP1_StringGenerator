@@ -45,6 +45,8 @@ public:
     void resized() override;
 
 private:
+    // ComboBox to select AES70/OCA class
+    std::unique_ptr<juce::ComboBox> m_ocaClassComboBox;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

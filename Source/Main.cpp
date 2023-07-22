@@ -43,14 +43,14 @@ public:
     {
         // This method is where you should put your application's initialisation code..
 
-        mainWindow.reset (new MainWindow (getApplicationName()));
+        m_mainWindow.reset (new MainWindow (getApplicationName()));
     }
 
     void shutdown() override
     {
         // Add your application's shutdown code here..
 
-        mainWindow = nullptr; // (deletes our window)
+        m_mainWindow = nullptr; // (deletes our window)
     }
 
     void systemRequestedQuit() override
@@ -113,7 +113,7 @@ public:
     };
 
 private:
-    std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr<MainWindow> m_mainWindow;
 };
 
 // This macro generates the main() routine that launches the app.
