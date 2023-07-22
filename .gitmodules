@@ -1,0 +1,6 @@
+[submodule "submodules/JUCE"]
+	path = submodules/JUCE
+	url = https://github.com/juce-framework/JUCE.git
+[submodule "submodules/NanoOcp"]
+	path = submodules/NanoOcp
+	url = https://github.com/ChristianAhrens/NanoOcp.git

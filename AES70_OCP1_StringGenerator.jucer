@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="bMvzN6" name="AES70_OCP1_StringGenerator" projectType="guiapp"
-              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
+              version="0.0.1" companyName="escalonely" companyCopyright="Copyright (C) 2023 Bernardo Escalona"
+              companyWebsite="https://github.com/escalonely" headerPath="../../submodules/NanoOcp/Source/&#10;">
   <MAINGROUP id="rBvj44" name="AES70_OCP1_StringGenerator">
+    <GROUP id="{4187CFA9-5D91-7F98-1636-F2209B89AF25}" name="submodules">
+      <GROUP id="{97D5A005-6FA8-BCBE-409C-259301295DC6}" name="NanoOcp">
+        <GROUP id="{25B83AC1-8C06-2583-E248-C22542F76780}" name="Source">
+          <FILE id="rvWjXy" name="Ocp1Message.cpp" compile="1" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.cpp"/>
+          <FILE id="YOVqxa" name="Ocp1Message.h" compile="0" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.h"/>
+        </GROUP>
+      </GROUP>
+    </GROUP>
     <GROUP id="{2156CA2B-72B1-D5CD-005E-9718D619F5B0}" name="Source">
       <FILE id="ubHQdS" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="HWPVHX" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
