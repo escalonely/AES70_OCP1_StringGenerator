@@ -31,6 +31,16 @@ SOFTWARE.
 
 #include <JuceHeader.h>
 
+
+/**
+ * Forward declarations.
+ */
+namespace AES70
+{
+    struct OcaRoot;
+}
+
+
 /*
     This component lives inside our window, and this is where you should put all
     your controls and content.
@@ -41,12 +51,39 @@ public:
     MainComponent();
     ~MainComponent() override;
 
+    // Reimplemented from juce::Component
+
     void paint (juce::Graphics&) override;
     void resized() override;
 
+protected:
+    /**
+     * Reset GUI components.
+     * @param[in] step  Determines which GUI controls are reset. 
+     */
+    void ResetComponents(int step);
+
 private:
+    // TextEditor to enter the AES70/OCA object number
+    std::unique_ptr<juce::TextEditor> m_ocaONoTextEditor;
+
     // ComboBox to select AES70/OCA class
     std::unique_ptr<juce::ComboBox> m_ocaClassComboBox;
+
+    // ComboBox to select AES70/OCA class property
+    std::unique_ptr<juce::ComboBox> m_ocaPropertyComboBox;
+
+    // ComboBox to select AES70/OCA command
+    std::unique_ptr<juce::ComboBox> m_ocaCommandComboBox;
+
+    // TextEditor to display AES70/OCA command
+    std::unique_ptr<juce::TextEditor> m_ocaCommandTextEditor;
+
+    // TextEditor to display AES70/OCA response
+    std::unique_ptr<juce::TextEditor> m_ocaResponseTextEditor;
+
+    // AES70/OCA object representing the current configuraion on the GUI
+    std::unique_ptr<AES70::OcaRoot> m_ocaObject;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
