@@ -56,12 +56,36 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+
 protected:
     /**
      * Reset GUI components.
      * @param[in] step  Determines which GUI controls are reset. 
      */
     void ResetComponents(int step);
+
+    /**
+     * Re-create the components for entering the values for Set commands and Get responses,
+     * m_ocaSetCommandValueComponent and m_ocaResponseValueComponent.
+     */
+    void CreateValueComponents();
+
+    /**
+     * Re-create the Command and Response binary strings, and display them on both TextEditors:
+     * m_ocaCommandTextEditor and m_ocaResponseTextEditor.
+     */
+    void UpdateBinaryStrings();
+
+    /**
+     * Re-create the Command and Response binary strings, based on the current configuration of the
+     * OCA class, ONo, Property, and Command GUI controls.
+     * 
+     * @parameter[out] commandString    The resulting Command binary string.
+     * @parameter[out] responseString   The resulting Response binary string.
+     * @return  True if both strings could be generated successfully.
+     */
+    bool CreateCommandAndResponseStrings(juce::String& commandString, juce::String& responseString);
+
 
 private:
     // TextEditor to enter the AES70/OCA object number
@@ -76,14 +100,30 @@ private:
     // ComboBox to select AES70/OCA command
     std::unique_ptr<juce::ComboBox> m_ocaCommandComboBox;
 
+    // Label above the m_ocaCommandTextEditor
+    std::unique_ptr<juce::Label> m_ocaCommandLabel;
+
+    // Component to enter values for Set methods
+    std::unique_ptr<juce::Component> m_ocaSetCommandValueComponent;
+
     // TextEditor to display AES70/OCA command
     std::unique_ptr<juce::TextEditor> m_ocaCommandTextEditor;
+
+    // Label above the m_ocaResponseTextEditor
+    std::unique_ptr<juce::Label> m_ocaResponseLabel;
+
+    // ComboBox to select AES70/OCA response status
+    std::unique_ptr<juce::ComboBox> m_ocaResponseStatusComboBox;
+
+    // Component to enter values for Get method responses
+    std::unique_ptr<juce::Component> m_ocaResponseValueComponent;
 
     // TextEditor to display AES70/OCA response
     std::unique_ptr<juce::TextEditor> m_ocaResponseTextEditor;
 
     // AES70/OCA object representing the current configuraion on the GUI
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

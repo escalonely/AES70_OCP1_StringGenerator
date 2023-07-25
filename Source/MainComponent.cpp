@@ -45,6 +45,8 @@ MainComponent::MainComponent()
     m_ocaONoTextEditor = std::make_unique<juce::TextEditor>("OCA ONo");
     m_ocaONoTextEditor->setHasFocusOutline(true);
     m_ocaONoTextEditor->setInputRestrictions(0, "0123456789");
+    m_ocaONoTextEditor->setJustification(juce::Justification(juce::Justification::centredRight));
+    m_ocaONoTextEditor->setText("10000", juce::dontSendNotification);
 
     m_ocaClassComboBox = std::make_unique<juce::ComboBox>("OCA Class");
     m_ocaClassComboBox->setHasFocusOutline(true);
@@ -55,11 +57,23 @@ MainComponent::MainComponent()
     m_ocaCommandComboBox = std::make_unique<juce::ComboBox>("OCA Command");
     m_ocaCommandComboBox->setHasFocusOutline(true);
 
+    m_ocaCommandLabel = std::make_unique<juce::Label>("OCA Command Label");
+    m_ocaCommandLabel->setJustificationType(juce::Justification::centredLeft);
+
     m_ocaCommandTextEditor = std::make_unique<juce::TextEditor>("OCA Command String");
     m_ocaCommandTextEditor->setHasFocusOutline(true);
     m_ocaCommandTextEditor->setReadOnly(true);
     m_ocaCommandTextEditor->setCaretVisible(false);
     m_ocaCommandTextEditor->setMultiLine(true, true);
+
+    m_ocaResponseLabel = std::make_unique<juce::Label>("OCA Response Label");
+    m_ocaResponseLabel->setJustificationType(juce::Justification::centredLeft);
+
+    m_ocaResponseStatusComboBox = std::make_unique<juce::ComboBox>("OCA Response Status");
+    m_ocaResponseStatusComboBox->setHasFocusOutline(true);
+    m_ocaResponseStatusComboBox->addItem("Ok", 1);
+    m_ocaResponseStatusComboBox->addItem("Protocol Version Error", 2);
+    m_ocaResponseStatusComboBox->addItem("Device Error", 3); // TODO add remaining statuses
 
     m_ocaResponseTextEditor = std::make_unique<juce::TextEditor>("OCA Response String");
     m_ocaResponseTextEditor->setHasFocusOutline(true);
@@ -77,6 +91,11 @@ MainComponent::MainComponent()
     m_ocaClassComboBox->addItem(AES70::MapOfClassNames.at(AES70::OCA_BOOLEAN_SENSOR), AES70::OCA_BOOLEAN_SENSOR);
     m_ocaClassComboBox->addItem(AES70::MapOfClassNames.at(AES70::OCA_AGENT), AES70::OCA_AGENT);
 
+    m_ocaONoTextEditor->onTextChange = [=]()
+    {
+        UpdateBinaryStrings();
+    };
+
     m_ocaClassComboBox->onChange = [=]()
     {
         ResetComponents(WorkflowStepSelectClass);
@@ -86,10 +105,10 @@ MainComponent::MainComponent()
         if (classIdx > 0)
         {
             m_ocaObject = std::unique_ptr<AES70::OcaRoot>(AES70::OcaRoot::Create(classIdx));
-            auto properties = m_ocaObject->GetProperties();
-            for (int pIdx = 0; pIdx < properties.size(); pIdx++)
+            auto propertyList = m_ocaObject->GetProperties();
+            for (int pIdx = 0; pIdx < propertyList.size(); pIdx++)
             {
-                m_ocaPropertyComboBox->addItem(properties.at(pIdx).m_name, pIdx + 1);
+                m_ocaPropertyComboBox->addItem(propertyList.at(pIdx).m_name, pIdx + 1);
             }
             m_ocaPropertyComboBox->setEnabled(true);
         }
@@ -102,8 +121,8 @@ MainComponent::MainComponent()
         int propIdx = m_ocaPropertyComboBox->getSelectedId();
         if (propIdx > 0)
         {
-            auto properties = m_ocaObject->GetProperties();
-            auto& prop = properties.at(propIdx - 1);
+            auto propertyList = m_ocaObject->GetProperties();
+            auto& prop = propertyList.at(propIdx - 1);
 
             if (prop.m_getMethodIdx != 0)
                 m_ocaCommandComboBox->addItem("GetValue", prop.m_getMethodIdx);
@@ -116,28 +135,21 @@ MainComponent::MainComponent()
     m_ocaCommandComboBox->onChange = [=]()
     {
         ResetComponents(WorkflowStepSelectCommand);
-
-        int propIdx = m_ocaPropertyComboBox->getSelectedId();
-        int methodIdx = m_ocaCommandComboBox->getSelectedId();
-        if ((propIdx > 0) && (methodIdx > 0))
-        {
-            auto properties = m_ocaObject->GetProperties();
-            auto& prop = properties.at(propIdx - 1);
-
-            //NanoOcp1::Ocp1CommandDefinition def(123 /* TODO: ONO */, prop.m_type, prop.m_defLevel, prop.m_index);
-
-            m_ocaCommandTextEditor->setText("Temporary placeholder command content.", false);
-            m_ocaResponseTextEditor->setText("Temporary placeholder response content.", false);
-        }
+        CreateValueComponents();
     };
 
     addAndMakeVisible(m_ocaONoTextEditor.get());
     addAndMakeVisible(m_ocaClassComboBox.get());
     addAndMakeVisible(m_ocaPropertyComboBox.get());
     addAndMakeVisible(m_ocaCommandComboBox.get());
+    addAndMakeVisible(m_ocaCommandLabel.get());
     addAndMakeVisible(m_ocaCommandTextEditor.get());
+    addAndMakeVisible(m_ocaResponseLabel.get());
+    addAndMakeVisible(m_ocaResponseStatusComboBox.get());
     addAndMakeVisible(m_ocaResponseTextEditor.get());
-    setSize (600, 400);
+    setSize(640, 480);
+
+    ResetComponents(WorkflowStepSelectClass);
 }
 
 MainComponent::~MainComponent()
@@ -148,6 +160,27 @@ void MainComponent::ResetComponents(int step)
 {
     m_ocaCommandTextEditor->clear();
     m_ocaResponseTextEditor->clear();
+    if (step < WorkflowStepEnterSetValue)
+    {
+        // Reset labels to show the default text
+        m_ocaCommandLabel->setText("Use the following binary string to execute the selected command.", juce::dontSendNotification);
+        m_ocaResponseLabel->setText("The following command can be expected.", juce::dontSendNotification);
+
+        // Reset status back to OK
+        m_ocaResponseStatusComboBox->setSelectedId(1, juce::dontSendNotification);
+
+        // Reset value components to just be generic components.
+        if (m_ocaSetCommandValueComponent)
+        {
+            this->removeChildComponent(m_ocaSetCommandValueComponent.get());
+            m_ocaSetCommandValueComponent.reset();
+        }
+        if (m_ocaResponseValueComponent)
+        {
+            this->removeChildComponent(m_ocaResponseValueComponent.get());
+            m_ocaResponseValueComponent.reset();
+        }
+    }
     if (step < WorkflowStepSelectCommand)
     {
         m_ocaCommandComboBox->clear();
@@ -168,6 +201,179 @@ void MainComponent::ResetComponents(int step)
     }
 }
 
+void MainComponent::CreateValueComponents()
+{
+    int propIdx = m_ocaPropertyComboBox->getSelectedId();
+    int methodIdx = m_ocaCommandComboBox->getSelectedId();
+    if ((propIdx <= 0) || (methodIdx <= 0))
+        return;
+
+    if (!m_ocaObject)
+        return;
+
+    auto propertyList = m_ocaObject->GetProperties();
+    if (propertyList.size() < propIdx)
+        return;
+
+    auto& prop = propertyList.at(propIdx - 1);
+    if ((prop.m_getMethodIdx != 0) && (prop.m_getMethodIdx == methodIdx))
+    {
+
+    }
+    else if ((prop.m_setMethodIdx != 0) && (prop.m_setMethodIdx == methodIdx))
+    {
+        switch (prop.m_type)
+        {
+        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
+            {
+                m_ocaSetCommandValueComponent = std::make_unique<juce::ComboBox>("OCA Set Command Value");
+                auto pComboBox = static_cast<juce::ComboBox*>(m_ocaSetCommandValueComponent.get());
+                pComboBox->addItem("True", 1);
+                pComboBox->addItem("False", 2);
+                pComboBox->setSelectedId(1, juce::sendNotification);
+                pComboBox->onChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_INT8:
+        case NanoOcp1::OCP1DATATYPE_INT16:
+        case NanoOcp1::OCP1DATATYPE_INT32:
+        case NanoOcp1::OCP1DATATYPE_INT64:
+        case NanoOcp1::OCP1DATATYPE_UINT8:
+        case NanoOcp1::OCP1DATATYPE_UINT16:
+        case NanoOcp1::OCP1DATATYPE_UINT32:
+        case NanoOcp1::OCP1DATATYPE_UINT64:
+            {
+                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                pTextEditor->setInputRestrictions(0, "0123456789");
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_FLOAT32:
+        case NanoOcp1::OCP1DATATYPE_FLOAT64:
+            {
+                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                pTextEditor->setInputRestrictions(0, "0123456789.");
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_STRING:
+            {
+                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (m_ocaSetCommandValueComponent)
+        {
+            m_ocaSetCommandValueComponent->setEnabled(true);
+            addAndMakeVisible(m_ocaSetCommandValueComponent.get());
+        }
+    }
+
+
+    resized();
+}
+
+void MainComponent::UpdateBinaryStrings()
+{
+    juce::String commandString;
+    juce::String responseString;
+    CreateCommandAndResponseStrings(commandString, responseString);
+    m_ocaCommandTextEditor->setText(commandString, juce::dontSendNotification);
+    m_ocaResponseTextEditor->setText(responseString, juce::dontSendNotification);
+}
+
+bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString, juce::String& responseString)
+{
+    int propIdx = m_ocaPropertyComboBox->getSelectedId();
+    int methodIdx = m_ocaCommandComboBox->getSelectedId();
+    if ((propIdx <= 0) || (methodIdx <= 0))
+        return false;
+
+    if (!m_ocaObject)
+        return false;
+
+    auto propertyList = m_ocaObject->GetProperties();
+    if (propertyList.size() < propIdx)
+        return false;
+
+    std::vector<std::uint8_t> paramData;
+    NanoOcp1::Ocp1CommandDefinition definition;
+    int ono = m_ocaONoTextEditor->getText().getIntValue();
+
+    auto& prop = propertyList.at(propIdx - 1);
+    if ((prop.m_getMethodIdx != 0) && (prop.m_getMethodIdx == methodIdx))
+    {
+        // TODO get command
+    }
+    else if ((prop.m_setMethodIdx != 0) && (prop.m_setMethodIdx == methodIdx))
+    {
+        switch (prop.m_type)
+        {
+        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
+            {
+                auto pComboBox = static_cast<juce::ComboBox*>(m_ocaSetCommandValueComponent.get());
+                std::uint8_t newValue = (pComboBox->getSelectedId() == 1) ? 1 : 0;
+                paramData = NanoOcp1::DataFromUint8(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_INT8:
+        case NanoOcp1::OCP1DATATYPE_INT16:
+        case NanoOcp1::OCP1DATATYPE_INT32:
+        case NanoOcp1::OCP1DATATYPE_INT64:
+        case NanoOcp1::OCP1DATATYPE_UINT8:
+        case NanoOcp1::OCP1DATATYPE_UINT16:
+        case NanoOcp1::OCP1DATATYPE_UINT32:
+        case NanoOcp1::OCP1DATATYPE_UINT64:
+            {
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                // TODO: paramData
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_FLOAT32:
+        case NanoOcp1::OCP1DATATYPE_FLOAT64:
+            {
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                // TODO: paramData
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_STRING:
+            {
+                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
+                // TODO: paramData
+            }
+            break;
+        default:
+            break;
+        }
+
+        definition = NanoOcp1::Ocp1CommandDefinition(ono, prop.m_type, prop.m_defLevel, prop.m_setMethodIdx, 1, paramData);
+    }
+
+    std::uint32_t handle;
+    auto memBlock = NanoOcp1::Ocp1CommandResponseRequired(definition, handle).GetMemoryBlock();
+    commandString = juce::String::toHexString(memBlock.getData(), memBlock.getSize());
+    return true;
+}
+
 void MainComponent::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
@@ -183,7 +389,7 @@ void MainComponent::resized()
     int margin = 2;
     int controlHeight = 40;
     auto bounds = getLocalBounds();
-    auto titleBounds = bounds.removeFromTop(controlHeight);
+    auto titleBounds = bounds.removeFromTop(controlHeight * 3);
     auto ocaComboBoxesBounds = bounds.removeFromTop(controlHeight);
 
     int comboBoxWidth = bounds.getWidth() / 5;
@@ -197,8 +403,25 @@ void MainComponent::resized()
     m_ocaPropertyComboBox->setBounds(ocaPropertyComboBoxBounds.reduced(margin));
     m_ocaCommandComboBox->setBounds(ocaCommandComboBoxBounds.reduced(margin));
 
+    bounds.removeFromTop(controlHeight / 2); // Spacer
+    auto ocaCommandLabelBounds = bounds.removeFromTop(controlHeight);
+    auto ocaSetCommandValueBounds = ocaCommandLabelBounds.removeFromRight(comboBoxWidth);
+    m_ocaCommandLabel->setBounds(ocaCommandLabelBounds.reduced(margin));
+    if (m_ocaSetCommandValueComponent)
+        m_ocaSetCommandValueComponent->setBounds(ocaSetCommandValueBounds.reduced(margin));
+
     auto ocaCommandBounds = bounds.removeFromTop(controlHeight * 2);
-    auto ocaResponseBounds = bounds.removeFromTop(controlHeight * 2);
     m_ocaCommandTextEditor->setBounds(ocaCommandBounds.reduced(margin));
+
+    bounds.removeFromTop(controlHeight / 2); // Spacer
+    auto ocaResponseLabelBounds = bounds.removeFromTop(controlHeight);
+    auto ocaResponseValueBounds = ocaResponseLabelBounds.removeFromRight(comboBoxWidth);
+    auto ocaResponseStatusComboBoxBounds = ocaResponseLabelBounds.removeFromRight(comboBoxWidth);
+    m_ocaResponseLabel->setBounds(ocaResponseLabelBounds.reduced(margin));
+    m_ocaResponseStatusComboBox->setBounds(ocaResponseStatusComboBoxBounds.reduced(margin));
+    if (m_ocaResponseValueComponent)
+        m_ocaResponseValueComponent->setBounds(ocaResponseValueBounds.reduced(margin));
+
+    auto ocaResponseBounds = bounds.removeFromTop(controlHeight * 2);
     m_ocaResponseTextEditor->setBounds(ocaResponseBounds.reduced(margin));
 }
