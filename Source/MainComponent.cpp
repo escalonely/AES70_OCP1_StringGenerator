@@ -138,6 +138,11 @@ MainComponent::MainComponent()
         CreateValueComponents();
     };
 
+    m_ocaResponseStatusComboBox->onChange = [=]()
+    {
+        UpdateBinaryStrings();
+    };
+
     addAndMakeVisible(m_ocaONoTextEditor.get());
     addAndMakeVisible(m_ocaClassComboBox.get());
     addAndMakeVisible(m_ocaPropertyComboBox.get());
@@ -186,6 +191,7 @@ void MainComponent::ResetComponents(int step)
         m_ocaCommandComboBox->clear();
         m_ocaCommandComboBox->setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaCommandComboBox->setEnabled(false);
+        m_ocaResponseStatusComboBox->setEnabled(false);
     }
     if (step < WorkflowStepSelectProperty)
     {
@@ -218,76 +224,14 @@ void MainComponent::CreateValueComponents()
     auto& prop = propertyList.at(propIdx - 1);
     if ((prop.m_getMethodIdx != 0) && (prop.m_getMethodIdx == methodIdx))
     {
-
+        m_ocaResponseValueComponent = CreateValueComponentForType(prop.m_type);
     }
     else if ((prop.m_setMethodIdx != 0) && (prop.m_setMethodIdx == methodIdx))
     {
-        switch (prop.m_type)
-        {
-        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
-            {
-                m_ocaSetCommandValueComponent = std::make_unique<juce::ComboBox>("OCA Set Command Value");
-                auto pComboBox = static_cast<juce::ComboBox*>(m_ocaSetCommandValueComponent.get());
-                pComboBox->addItem("True", 1);
-                pComboBox->addItem("False", 2);
-                pComboBox->setSelectedId(1, juce::sendNotification);
-                pComboBox->onChange = [=]()
-                {
-                    UpdateBinaryStrings();
-                };
-            }
-            break;
-        case NanoOcp1::OCP1DATATYPE_INT8:
-        case NanoOcp1::OCP1DATATYPE_INT16:
-        case NanoOcp1::OCP1DATATYPE_INT32:
-        case NanoOcp1::OCP1DATATYPE_INT64:
-        case NanoOcp1::OCP1DATATYPE_UINT8:
-        case NanoOcp1::OCP1DATATYPE_UINT16:
-        case NanoOcp1::OCP1DATATYPE_UINT32:
-        case NanoOcp1::OCP1DATATYPE_UINT64:
-            {
-                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
-                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
-                pTextEditor->setInputRestrictions(0, "0123456789");
-                pTextEditor->onTextChange = [=]()
-                {
-                    UpdateBinaryStrings();
-                };
-            }
-            break;
-        case NanoOcp1::OCP1DATATYPE_FLOAT32:
-        case NanoOcp1::OCP1DATATYPE_FLOAT64:
-            {
-                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
-                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
-                pTextEditor->setInputRestrictions(0, "0123456789.");
-                pTextEditor->onTextChange = [=]()
-                {
-                    UpdateBinaryStrings();
-                };
-            }
-            break;
-        case NanoOcp1::OCP1DATATYPE_STRING:
-            {
-                m_ocaSetCommandValueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
-                auto pTextEditor = static_cast<juce::TextEditor*>(m_ocaSetCommandValueComponent.get());
-                pTextEditor->onTextChange = [=]()
-                {
-                    UpdateBinaryStrings();
-                };
-            }
-            break;
-        default:
-            break;
-        }
-
-        if (m_ocaSetCommandValueComponent)
-        {
-            m_ocaSetCommandValueComponent->setEnabled(true);
-            addAndMakeVisible(m_ocaSetCommandValueComponent.get());
-        }
+        m_ocaSetCommandValueComponent = CreateValueComponentForType(prop.m_type);
     }
 
+    m_ocaResponseStatusComboBox->setEnabled(true);
 
     resized();
 }
@@ -315,22 +259,46 @@ bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString,
     if (propertyList.size() < propIdx)
         return false;
 
-    std::vector<std::uint8_t> paramData;
-    NanoOcp1::Ocp1CommandDefinition definition;
-    int ono = m_ocaONoTextEditor->getText().getIntValue();
+    std::uint8_t commandParamCount(0);
+    std::uint8_t responseParamCount(0);
+    std::vector<std::uint8_t> commandParamData;
+    std::vector<std::uint8_t> responseParamData;
+    NanoOcp1::Ocp1CommandDefinition commandDefinition;
 
     auto& prop = propertyList.at(propIdx - 1);
     if ((prop.m_getMethodIdx != 0) && (prop.m_getMethodIdx == methodIdx))
     {
-        // TODO get command
+        responseParamCount = 1;
+        responseParamData = GetParamDataFromValueComponent(m_ocaResponseValueComponent.get(), prop.m_type);
     }
     else if ((prop.m_setMethodIdx != 0) && (prop.m_setMethodIdx == methodIdx))
     {
-        switch (prop.m_type)
-        {
+        commandParamCount = 1;
+        commandParamData = GetParamDataFromValueComponent(m_ocaSetCommandValueComponent.get(), prop.m_type);
+    }
+
+    std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor->getText().getIntValue());
+    std::uint8_t responseStatus = static_cast<std::uint32_t>(m_ocaResponseStatusComboBox->getSelectedId() - 1);
+
+    std::uint32_t handle; // TODO: make handle settable
+    commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, prop.m_type, prop.m_defLevel, prop.m_setMethodIdx, commandParamCount, commandParamData);
+    auto commandMemBlock = NanoOcp1::Ocp1CommandResponseRequired(commandDefinition, handle).GetMemoryBlock();
+    commandString = juce::String::toHexString(commandMemBlock.getData(), commandMemBlock.getSize());
+
+    auto responseMemBlock = NanoOcp1::Ocp1Response(handle, responseStatus, responseParamCount, responseParamData).GetMemoryBlock();
+    responseString = juce::String::toHexString(responseMemBlock.getData(), responseMemBlock.getSize());
+    return true;
+}
+
+std::vector<std::uint8_t> MainComponent::GetParamDataFromValueComponent(juce::Component* component, int dataType)
+{
+    std::vector<std::uint8_t> paramData;
+
+    switch (dataType)
+    {
         case NanoOcp1::OCP1DATATYPE_BOOLEAN:
             {
-                auto pComboBox = static_cast<juce::ComboBox*>(m_ocaSetCommandValueComponent.get());
+                auto pComboBox = static_cast<juce::ComboBox*>(component);
                 std::uint8_t newValue = (pComboBox->getSelectedId() == 1) ? 1 : 0;
                 paramData = NanoOcp1::DataFromUint8(newValue);
             }
@@ -363,15 +331,81 @@ bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString,
             break;
         default:
             break;
-        }
-
-        definition = NanoOcp1::Ocp1CommandDefinition(ono, prop.m_type, prop.m_defLevel, prop.m_setMethodIdx, 1, paramData);
     }
 
-    std::uint32_t handle;
-    auto memBlock = NanoOcp1::Ocp1CommandResponseRequired(definition, handle).GetMemoryBlock();
-    commandString = juce::String::toHexString(memBlock.getData(), memBlock.getSize());
-    return true;
+    return paramData;
+}
+
+std::unique_ptr<juce::Component> MainComponent::CreateValueComponentForType(int dataType)
+{
+    std::unique_ptr<juce::Component> valueComponent;
+
+    switch (dataType)
+    {
+        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
+            {
+                valueComponent = std::make_unique<juce::ComboBox>("OCA Set Command Value");
+                auto pComboBox = static_cast<juce::ComboBox*>(valueComponent.get());
+                pComboBox->addItem("True", 1);
+                pComboBox->addItem("False", 2);
+                pComboBox->setSelectedId(1, juce::sendNotification);
+                pComboBox->onChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_INT8:
+        case NanoOcp1::OCP1DATATYPE_INT16:
+        case NanoOcp1::OCP1DATATYPE_INT32:
+        case NanoOcp1::OCP1DATATYPE_INT64:
+        case NanoOcp1::OCP1DATATYPE_UINT8:
+        case NanoOcp1::OCP1DATATYPE_UINT16:
+        case NanoOcp1::OCP1DATATYPE_UINT32:
+        case NanoOcp1::OCP1DATATYPE_UINT64:
+            {
+                valueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(valueComponent.get());
+                pTextEditor->setInputRestrictions(0, "0123456789");
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_FLOAT32:
+        case NanoOcp1::OCP1DATATYPE_FLOAT64:
+            {
+                valueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(valueComponent.get());
+                pTextEditor->setInputRestrictions(0, "0123456789.");
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_STRING:
+            {
+                valueComponent = std::make_unique<juce::TextEditor>("OCA Set Command Value");
+                auto pTextEditor = static_cast<juce::TextEditor*>(valueComponent.get());
+                pTextEditor->onTextChange = [=]()
+                {
+                    UpdateBinaryStrings();
+                };
+            }
+            break;
+        default:
+            break;
+    }
+
+    if (valueComponent)
+    {
+        valueComponent->setEnabled(true);
+        addAndMakeVisible(valueComponent.get());
+    }
+
+    return std::move(valueComponent);
 }
 
 void MainComponent::paint(juce::Graphics& g)
