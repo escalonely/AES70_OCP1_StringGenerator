@@ -37,6 +37,7 @@ SOFTWARE.
  */
 namespace AES70
 {
+    struct Property;
     struct OcaRoot;
 }
 
@@ -89,12 +90,12 @@ protected:
     /**
      * TODO
      */
-    std::vector<std::uint8_t> GetParamDataFromValueComponent(juce::Component* component, int dataType);
+    std::vector<std::uint8_t> GetParamDataFromValueComponent(juce::Component* component, int dataType, int classIdx);
 
     /**
      * TODO
      */
-    std::unique_ptr<juce::Component> CreateValueComponentForType(int dataType);
+    std::unique_ptr<juce::Component> CreateValueComponentForProperty(const AES70::Property& prop, int classIdx);
 
 private:
     // TextEditor to enter the AES70/OCA object number
