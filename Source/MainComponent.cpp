@@ -101,9 +101,12 @@ MainComponent::MainComponent()
         {
             m_ocaObject = std::unique_ptr<AES70::OcaRoot>(AES70::OcaRoot::Create(classIdx));
             auto propertyList = m_ocaObject->GetProperties();
-            for (int pIdx = 0; pIdx < propertyList.size(); pIdx++)
+            for (int propIdx = 0; propIdx < propertyList.size(); propIdx++)
             {
-                m_ocaPropertyComboBox->addItem(propertyList.at(pIdx).m_name, pIdx + 1);
+                juce::String propName = juce::String(propertyList.at(propIdx).m_defLevel) + "," +
+                                        juce::String(propertyList.at(propIdx).m_index) + ": " +
+                                        propertyList.at(propIdx).m_name;
+                m_ocaPropertyComboBox->addItem(propName, propIdx + 1);
             }
             m_ocaPropertyComboBox->setEnabled(true);
         }
@@ -118,12 +121,21 @@ MainComponent::MainComponent()
         {
             auto propertyList = m_ocaObject->GetProperties();
             auto& prop = propertyList.at(propIdx - 1);
+            bool enable(false);
 
             if (prop.m_getMethodIdx != 0)
-                m_ocaCommandComboBox->addItem("GetValue", prop.m_getMethodIdx);
+            {
+                juce::String cmdName = juce::String(prop.m_getMethodIdx) + ": GetValue";
+                m_ocaCommandComboBox->addItem(cmdName, prop.m_getMethodIdx);
+                enable = true;
+            }
             if (prop.m_setMethodIdx != 0)
-                m_ocaCommandComboBox->addItem("SetValue", prop.m_setMethodIdx);
-            m_ocaCommandComboBox->setEnabled(true);
+            {
+                juce::String cmdName = juce::String(prop.m_setMethodIdx) + ": SetValue";
+                m_ocaCommandComboBox->addItem(cmdName, prop.m_setMethodIdx);
+                enable = true;
+            }
+            m_ocaCommandComboBox->setEnabled(enable);
         }
     };
 
