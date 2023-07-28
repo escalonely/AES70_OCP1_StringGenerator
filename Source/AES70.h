@@ -36,6 +36,11 @@ SOFTWARE.
 namespace AES70
 {
 
+/**
+ * Supported AES70 classes.
+ * NOTE: The assigned index numbers are arbitrary, are not defined in AES70, 
+ *       are in no way related to their ClassID as defined in AES70.
+ */
 enum ClassIdx
 {
     OCA_ROOT = 1,
@@ -60,6 +65,9 @@ enum ClassIdx
     OCA_MAX_CLASS_IDX,
 };
 
+/**
+ * Decorated names for all supported AES70 classes.
+ */
 static const std::map<int, juce::String> MapOfClassNames = {
     { OCA_ROOT,                 "OcaRoot" },
     { OCA_WORKER,               " +-OcaWorker" },
@@ -82,6 +90,9 @@ static const std::map<int, juce::String> MapOfClassNames = {
     { OCA_AGENT,                " +-OcaAgent" }
 };
 
+/**
+ * AES70 Property
+ */
 struct Property
 {
     int m_defLevel;
@@ -97,26 +108,52 @@ struct Property
  */
 struct OcaRoot
 {
+    /**
+     * Factory method to create an OcaRoot-related object.
+     *
+     * @param[in] classIdx  Index of AES70 class based on the ClassIdx enum.
+     * @return  A pointer to an OcaRoot-related object. NOTE: Ownership of the object
+     *          is responsibility of the caller of the method. 
+     */
     static OcaRoot* Create(int classIdx);
  
-    //virtual juce::String Name() const
-    //{
-    //    return "OcaRoot";
-    //}
+    /**
+     * Definition level of the AES70 class, where OcaRoot is at level 1 and the level
+     * increases with depth in the inheritance tree.
+     * 
+     * @return  Definition level of this class.
+     */
+    virtual int DefLevel() const;
 
-    virtual int DefLevel() const
-    {
-        return 1;
-    }
+    /**
+     * Obtain the properties defined by AES70 for this class. This includes the properties
+     * defined by all parent classes all the way up to OcaRoot.
+     * 
+     * @return  A list of all properties defined by this class.
+     */
+    virtual std::vector<Property> GetProperties() const;
 
-    virtual std::vector<Property> GetProperties() const
-    {
-        std::vector<Property> ret;
-        ret.push_back({
-            OcaRoot::DefLevel(), 5 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Role", 5 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    /**
+     * Create a component which can be used to represent an AES70 class property on a GUI.
+     * 
+     * @param[in] prop  The class property, whose definition level, index, and data type define 
+     *                  how to best represent and allow users to set this property on a GUI.
+     * @param[in] onChangeFunction  Method which shall be called whenever the value on the created component changes.
+     * @return  A pointer to a juce::Component to be used on the GUI. 
+     *          NOTE: Ownership of the object is responsibility of the caller of the method. 
+     */
+    virtual juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction);
+
+    /**
+     * Read the user value of the given GUI component, and obtain the byte array used to represent 
+     * this value in a AES70 OCP.1 message, based on the data type of the property.
+     * 
+     * @param[in] component The GUI component.
+     * @param[in] prop      The class property, whose definition level, index, and data type define 
+     *                      how the user value shall be interpreted for transmission.
+     * @return  Byte array that can be used as parameter data for an OCP.1 message.
+     */
+    virtual std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop);
 };
 
 /**
@@ -124,19 +161,10 @@ struct OcaRoot
  */
 struct OcaWorker : public OcaRoot
 {
-    int DefLevel() const override
-    {
-        return OcaRoot::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaRoot::GetProperties();
-        ret.push_back({
-            OcaWorker::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_BOOLEAN, "Enabled", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -160,19 +188,10 @@ struct OcaActuator : public OcaWorker
  */
 struct OcaSwitch : public OcaActuator
 {
-    int DefLevel() const override
-    {
-        return OcaActuator::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaActuator::GetProperties();
-        ret.push_back({
-            OcaSwitch::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_UINT16, "Position", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -180,19 +199,10 @@ struct OcaSwitch : public OcaActuator
  */
 struct OcaMute : public OcaActuator
 {
-    int DefLevel() const override
-    {
-        return OcaActuator::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaActuator::GetProperties();
-        ret.push_back({
-            OcaMute::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_UINT8, "Mute", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -200,19 +210,10 @@ struct OcaMute : public OcaActuator
  */
 struct OcaGain : public OcaActuator
 {
-    int DefLevel() const override
-    {
-        return OcaActuator::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaActuator::GetProperties();
-        ret.push_back({
-            OcaGain::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "Gain", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -428,7 +429,7 @@ struct OcaLevelSensor : public OcaSensor
 };
 
 /**
- * OcaLevelSensor
+ * OcaAudioLevelSensor
  */
 struct OcaAudioLevelSensor : public OcaLevelSensor
 {
@@ -462,81 +463,5 @@ struct OcaAgent : public OcaRoot
         return ret;
     }
 };
-
-
-/**
- * Implementation of OcaRoot methods
- */
-
-OcaRoot* OcaRoot::Create(int classIdx)
-{
-    OcaRoot* obj(nullptr);
-    switch (classIdx)
-    {
-        case OCA_ROOT:
-            obj = new OcaRoot;
-            break;
-        case OCA_WORKER:
-            obj = new OcaWorker;
-            break;
-        case OCA_ACTUATOR:
-            obj = new OcaActuator;
-            break;
-        case OCA_SWITCH:
-            obj = new OcaSwitch;
-            break;
-        case OCA_MUTE:
-            obj = new OcaMute;
-            break;
-        case OCA_GAIN:
-            obj = new OcaGain;
-            break;
-        case OCA_DELAY:
-            obj = new OcaDelay;
-            break;
-        case OCA_BASIC_ACTUATOR:
-            obj = new OcaBasicActuator;
-            break;
-        case OCA_STRING_ACTUATOR:
-            obj = new OcaStringActuator;
-            break;
-        case OCA_INT32_ACTUATOR:
-            obj = new OcaInt32Actuator;
-            break;
-        case OCA_SENSOR:
-            obj = new OcaSensor;
-            break;
-        case OCA_BASIC_SENSOR:
-            obj = new OcaBasicSensor;
-            break;
-        case OCA_BOOLEAN_SENSOR:
-            obj = new OcaBooleanSensor;
-            break;
-        case OCA_INT32_SENSOR:
-            obj = new OcaInt32Sensor;
-            break;
-        case OCA_FLOAT32_SENSOR:
-            obj = new OcaFloat32Sensor;
-            break;
-        case OCA_STRING_SENSOR:
-            obj = new OcaStringSensor;
-            break;
-        case OCA_LEVEL_SENSOR:
-            obj = new OcaLevelSensor;
-            break;
-        case OCA_AUDIO_LEVEL_SENSOR:
-            obj = new OcaAudioLevelSensor;
-            break;
-        case OCA_AGENT:
-            obj = new OcaAgent;
-            break;
-        default:
-            break;
-    }
-
-    jassert(obj != nullptr); // Missing implementation!
-    return obj;
-}
-
 
 }

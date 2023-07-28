@@ -87,15 +87,6 @@ protected:
      */
     bool CreateCommandAndResponseStrings(juce::String& commandString, juce::String& responseString);
 
-    /**
-     * TODO
-     */
-    std::vector<std::uint8_t> GetParamDataFromValueComponent(juce::Component* component, int dataType, int classIdx);
-
-    /**
-     * TODO
-     */
-    std::unique_ptr<juce::Component> CreateValueComponentForProperty(const AES70::Property& prop, int classIdx);
 
 private:
     // TextEditor to enter the AES70/OCA object number
