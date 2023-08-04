@@ -78,14 +78,16 @@ protected:
     void UpdateBinaryStrings();
 
     /**
-     * Re-create the Command and Response binary strings, based on the current configuration of the
-     * OCA class, ONo, Property, and Command GUI controls.
+     * Re-create the Command, Response, and Notification binary strings, based on the current 
+     * configuration of the OCA class, ONo, Property, and Command GUI controls.
      * 
-     * @parameter[out] commandString    The resulting Command binary string.
-     * @parameter[out] responseString   The resulting Response binary string.
-     * @return  True if both strings could be generated successfully.
+     * @parameter[out] commandString        The resulting Command binary string.
+     * @parameter[out] responseString       The resulting Response binary string.
+     * @parameter[out] notificationString   The Notification binary string that would result from a PropertyChanged event
+     *                                      in the device. Will only be non-empty if the AddSubscription command is selected.
+     * @return  True if all strings could be generated successfully.
      */
-    bool CreateCommandAndResponseStrings(juce::String& commandString, juce::String& responseString);
+    bool CreateBinaryStrings(juce::String& commandString, juce::String& responseString, juce::String& notificationString);
 
 
 private:
@@ -98,23 +100,29 @@ private:
     // ComboBox to select AES70/OCA class property
     std::unique_ptr<juce::ComboBox> m_ocaPropertyComboBox;
 
-    // ComboBox to select AES70/OCA command
+    // ComboBox to select the AES70/OCA Command to send
     std::unique_ptr<juce::ComboBox> m_ocaCommandComboBox;
 
     // Component to enter values for Set methods
     std::unique_ptr<juce::Component> m_ocaSetCommandValueComponent;
 
-    // TextEditor to display AES70/OCA command
+    // TextEditor to display the AES70/OCA Command to send
     std::unique_ptr<juce::TextEditor> m_ocaCommandTextEditor;
 
-    // ComboBox to select AES70/OCA response status
+    // ComboBox to select the AES70/OCA Response status
     std::unique_ptr<juce::ComboBox> m_ocaResponseStatusComboBox;
 
-    // Component to enter values for Get method responses
+    // Component to enter values for the Get method Response message
     std::unique_ptr<juce::Component> m_ocaResponseValueComponent;
 
-    // TextEditor to display AES70/OCA response
+    // TextEditor to display the AES70/OCA Response message
     std::unique_ptr<juce::TextEditor> m_ocaResponseTextEditor;
+
+    // Component to enter values for Notifications
+    std::unique_ptr<juce::Component> m_ocaNotificationValueComponent;
+
+    // TextEditor to display AES70/OCA Notification messages
+    std::unique_ptr<juce::TextEditor> m_ocaNotificationTextEditor;
 
     // Labels on the UI
     std::vector<std::unique_ptr<juce::Label>> m_ocaLabels;

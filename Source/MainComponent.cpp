@@ -65,6 +65,7 @@ enum GuiLabels
     LABELIDX_RESP_STATUS,
     LABELIDX_RESP_VALUE,
     LABELIDX_NOTIF_STRING,
+    LABELIDX_NOTIF_VALUE,
     LABELIDX_MAX,
 };
 
@@ -165,7 +166,7 @@ MainComponent::MainComponent()
                 //enable = true;
             }
 
-            // TODO
+            // In addition to the property-related commands, offer the AddSubscription command.
             m_ocaCommandComboBox->addSeparator();
             m_ocaCommandComboBox->addItem("AddSubscription", MethodIndexForAddSubscription);
             m_ocaCommandComboBox->setEnabled(true);
@@ -175,6 +176,21 @@ MainComponent::MainComponent()
     m_ocaCommandComboBox->onChange = [=]()
     {
         ResetComponents(WORKFLOW_STEP_SELECT_COMMAND);
+
+        // TODO AddSubscription
+        if (m_ocaCommandComboBox->getSelectedId() == MethodIndexForAddSubscription)
+        {
+            m_ocaLabels.at(LABELIDX_NOTIF_STRING)->setText("The following Notification can be expected.", juce::dontSendNotification);
+
+            // TODO create m_ocaNotificationTextEditor
+            m_ocaNotificationTextEditor = std::make_unique<juce::TextEditor>("OCA Notification String");
+            m_ocaNotificationTextEditor->setHasFocusOutline(true);
+            m_ocaNotificationTextEditor->setReadOnly(true);
+            m_ocaNotificationTextEditor->setCaretVisible(false);
+            m_ocaNotificationTextEditor->setMultiLine(true, true);
+            addAndMakeVisible(m_ocaNotificationTextEditor.get());
+        }
+
         CreateValueComponents();
         UpdateBinaryStrings();
     };
@@ -191,7 +207,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_ocaCommandTextEditor.get());
     addAndMakeVisible(m_ocaResponseStatusComboBox.get());
     addAndMakeVisible(m_ocaResponseTextEditor.get());
-    setSize(640, 480);
+    setSize(640, 600);
 
     ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
 }
@@ -211,8 +227,9 @@ void MainComponent::ResetComponents(int step)
         m_ocaLabels.at(LABELIDX_CLASS)->setText("Class:", juce::dontSendNotification);
         m_ocaLabels.at(LABELIDX_PROP)->setText("Property:", juce::dontSendNotification);
         m_ocaLabels.at(LABELIDX_COMMAND)->setText("Command:", juce::dontSendNotification);
-        m_ocaLabels.at(LABELIDX_CMD_STRING)->setText("Use the following binary string to execute the selected command.", juce::dontSendNotification);
-        m_ocaLabels.at(LABELIDX_RESP_STRING)->setText("The following command can be expected.", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_CMD_STRING)->setText("Use the following binary string to execute the selected Command.", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_RESP_STRING)->setText("The following Response can be expected.", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_NOTIF_STRING)->setText("", juce::dontSendNotification);
 
         // Reset status back to OK
         m_ocaResponseStatusComboBox->setSelectedId(1, juce::dontSendNotification);
@@ -227,6 +244,18 @@ void MainComponent::ResetComponents(int step)
         {
             this->removeChildComponent(m_ocaResponseValueComponent.get());
             m_ocaResponseValueComponent.reset();
+        }
+        if (m_ocaNotificationValueComponent)
+        {
+            this->removeChildComponent(m_ocaNotificationValueComponent.get());
+            m_ocaNotificationValueComponent.reset();
+        }
+
+        // Remove the TextEditor for displaying Notification messages.
+        if (m_ocaNotificationTextEditor)
+        {
+            this->removeChildComponent(m_ocaNotificationTextEditor.get());
+            m_ocaNotificationTextEditor.reset();
         }
     }
     if (step < WORKFLOW_STEP_SELECT_COMMAND)
@@ -264,26 +293,28 @@ void MainComponent::CreateValueComponents()
     if (propertyList.size() < propIdx)
         return;
 
+    // Create a component appropriate for displaying this properties value.
     auto& prop = propertyList.at(propIdx - 1);
+    auto pComponent = m_ocaObject->CreateComponentForProperty(prop, 
+        [this] {
+            UpdateBinaryStrings();
+        });
+    jassert(pComponent); // Missing implementation!
+    addAndMakeVisible(pComponent);
+
+    // Depending on whether the Get, Set, or AddSubscription commands are selected,
+    // assign this new component to the correct member variable.
     if (prop.m_getMethodIdx == methodIdx)
     {
-        auto pComponent = m_ocaObject->CreateComponentForProperty(prop, [this]
-            {
-                UpdateBinaryStrings();
-            });
-        jassert(pComponent);
-        addAndMakeVisible(pComponent);
         m_ocaResponseValueComponent = std::unique_ptr<juce::Component>(pComponent);
     }
     else if (prop.m_setMethodIdx == methodIdx)
     {
-        auto pComponent = m_ocaObject->CreateComponentForProperty(prop, [this]
-            {
-                UpdateBinaryStrings();
-            });
-        jassert(pComponent);
-        addAndMakeVisible(pComponent);
         m_ocaSetCommandValueComponent = std::unique_ptr<juce::Component>(pComponent);
+    }
+    else if (methodIdx == MethodIndexForAddSubscription)
+    {
+        m_ocaNotificationValueComponent = std::unique_ptr<juce::Component>(pComponent);
     }
 
     m_ocaResponseStatusComboBox->setEnabled(true);
@@ -296,12 +327,15 @@ void MainComponent::UpdateBinaryStrings()
     DBG("UpdateBinaryStrings");
     juce::String commandString;
     juce::String responseString;
-    CreateCommandAndResponseStrings(commandString, responseString);
+    juce::String notificationString;
+    CreateBinaryStrings(commandString, responseString, notificationString);
     m_ocaCommandTextEditor->setText(commandString, juce::dontSendNotification);
     m_ocaResponseTextEditor->setText(responseString, juce::dontSendNotification);
+    if (m_ocaNotificationTextEditor)
+        m_ocaNotificationTextEditor->setText(notificationString, juce::dontSendNotification);
 }
 
-bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString, juce::String& responseString)
+bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::String& responseString, juce::String& notificationString)
 {
     int propIdx = m_ocaPropertyComboBox->getSelectedId();
     int methodIdx = m_ocaCommandComboBox->getSelectedId();
@@ -315,11 +349,13 @@ bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString,
     if (propertyList.size() < propIdx)
         return false;
 
-    std::uint8_t commandParamCount(0);
+    std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor->getText().getIntValue());
+    std::uint8_t responseStatus = static_cast<std::uint8_t>(m_ocaResponseStatusComboBox->getSelectedId() - 1);
+
     std::uint8_t responseParamCount(0);
-    std::vector<std::uint8_t> commandParamData;
     std::vector<std::uint8_t> responseParamData;
     NanoOcp1::Ocp1CommandDefinition commandDefinition;
+    notificationString.clear();
 
     auto& prop = propertyList.at(propIdx - 1);
     if (prop.m_getMethodIdx == methodIdx)
@@ -327,24 +363,47 @@ bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString,
         responseParamCount = 1;
         responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
         jassert(responseParamData.size() > 0);
+
+        commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
+                                                            prop.m_type, 
+                                                            prop.m_defLevel, 
+                                                            prop.m_getMethodIdx);
     }
     else if (prop.m_setMethodIdx == methodIdx)
     {
-        commandParamCount = 1;
-        commandParamData = m_ocaObject->CreateParamDataForComponent(m_ocaSetCommandValueComponent.get(), prop);
+        auto commandParamData = m_ocaObject->CreateParamDataForComponent(m_ocaSetCommandValueComponent.get(), prop);
         jassert(commandParamData.size() > 0);
+
+        commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
+                                                            prop.m_type, 
+                                                            prop.m_defLevel, 
+                                                            prop.m_setMethodIdx, 
+                                                            1, /* paramCount */ 
+                                                            commandParamData);
+    }
+    else if (methodIdx == MethodIndexForAddSubscription)
+    {
+        commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno,
+                                                            prop.m_type,
+                                                            prop.m_defLevel,
+                                                            prop.m_index).AddSubscriptionCommand();
+
+        auto notificationParamData = m_ocaObject->CreateParamDataForComponent(m_ocaNotificationValueComponent.get(), prop);
+        auto notificationMemBlock = NanoOcp1::Ocp1Notification(targetOno, 
+                                                               prop.m_defLevel, 
+                                                               prop.m_index, 
+                                                               1 /* paramCount */, 
+                                                               notificationParamData).GetMemoryBlock();
+        notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
     }
 
-    std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor->getText().getIntValue());
-    std::uint8_t responseStatus = static_cast<std::uint8_t>(m_ocaResponseStatusComboBox->getSelectedId() - 1);
-
-    std::uint32_t handle; // TODO: make handle settable
-    commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, prop.m_type, prop.m_defLevel, prop.m_setMethodIdx, commandParamCount, commandParamData);
+    std::uint32_t handle; // TODO: make handle settable    
     auto commandMemBlock = NanoOcp1::Ocp1CommandResponseRequired(commandDefinition, handle).GetMemoryBlock();
-    commandString = juce::String::toHexString(commandMemBlock.getData(), commandMemBlock.getSize());
+    commandString = juce::String::toHexString(commandMemBlock.getData(), static_cast<int>(commandMemBlock.getSize()));
 
     auto responseMemBlock = NanoOcp1::Ocp1Response(handle, responseStatus, responseParamCount, responseParamData).GetMemoryBlock();
     responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
+
     return true;
 }
 
@@ -409,4 +468,19 @@ void MainComponent::resized()
 
     auto ocaResponseBounds = bounds.removeFromTop(controlHeight * 2);
     m_ocaResponseTextEditor->setBounds(ocaResponseBounds.reduced(margin));
+
+    // Resize components which only exist if the AddSubscription command is selected.
+    if (m_ocaNotificationTextEditor)
+    {
+        bounds.removeFromTop(controlHeight / 2); // Spacer
+        auto ocaNotificationLabelBounds = bounds.removeFromTop(controlHeight);
+        auto ocaNotificationValueBounds = ocaNotificationLabelBounds.removeFromRight(comboBoxWidth);
+        m_ocaLabels.at(LABELIDX_NOTIF_STRING)->setBounds(ocaNotificationLabelBounds.reduced(margin));
+
+        jassert(m_ocaNotificationValueComponent); // Expected since m_ocaNotificationTextEditor exists.
+        m_ocaNotificationValueComponent->setBounds(ocaNotificationValueBounds.reduced(margin));
+
+        auto ocaNotificationBounds = bounds.removeFromTop(controlHeight * 2);
+        m_ocaNotificationTextEditor->setBounds(ocaNotificationBounds.reduced(margin));
+    }
 }
