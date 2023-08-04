@@ -42,11 +42,11 @@ namespace AES70
 }
 
 
-/*
-    This component lives inside our window, and this is where you should put all
-    your controls and content.
-*/
-class MainComponent  : public juce::Component
+/**
+ * Main component displayed on the application's UI.
+ * It inherits from juce::Viewport to allow scrolling through the contents inside.
+ */
+class MainComponent  : public juce::Viewport
 {
 public:
     MainComponent();
@@ -91,6 +91,9 @@ protected:
 
 
 private:
+    // Component inside the main juce::Viewport, set with setViewedComponent.
+    juce::Component m_container;
+
     // TextEditor to enter the AES70/OCA object number
     std::unique_ptr<juce::TextEditor> m_ocaONoTextEditor;
 

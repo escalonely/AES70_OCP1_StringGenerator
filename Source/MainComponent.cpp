@@ -36,6 +36,11 @@ SOFTWARE.
 static constexpr int MethodIndexForAddSubscription = 100;
 
 /**
+ * Default height (in pixels) of m_container, the container component within the juce::Viewport.
+ */
+static constexpr int ContainerComponentDefaultHeight = 480;
+
+/**
  * Expected user workflow, separated in discrete steps.
  */
 enum WorkflowSteps
@@ -108,7 +113,7 @@ MainComponent::MainComponent()
     {
         m_ocaLabels.emplace_back(std::make_unique<juce::Label>("OCA Label " + juce::String(labelIdx)));
         m_ocaLabels.back()->setJustificationType(juce::Justification::bottomLeft);
-        addAndMakeVisible(m_ocaLabels.back().get());
+        m_container.addAndMakeVisible(m_ocaLabels.back().get());
     }
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
@@ -177,18 +182,17 @@ MainComponent::MainComponent()
     {
         ResetComponents(WORKFLOW_STEP_SELECT_COMMAND);
 
-        // TODO AddSubscription
+        // Special handling for the AddSubscription command
         if (m_ocaCommandComboBox->getSelectedId() == MethodIndexForAddSubscription)
         {
             m_ocaLabels.at(LABELIDX_NOTIF_STRING)->setText("The following Notification can be expected.", juce::dontSendNotification);
 
-            // TODO create m_ocaNotificationTextEditor
             m_ocaNotificationTextEditor = std::make_unique<juce::TextEditor>("OCA Notification String");
             m_ocaNotificationTextEditor->setHasFocusOutline(true);
             m_ocaNotificationTextEditor->setReadOnly(true);
             m_ocaNotificationTextEditor->setCaretVisible(false);
             m_ocaNotificationTextEditor->setMultiLine(true, true);
-            addAndMakeVisible(m_ocaNotificationTextEditor.get());
+            m_container.addAndMakeVisible(m_ocaNotificationTextEditor.get());
         }
 
         CreateValueComponents();
@@ -200,14 +204,15 @@ MainComponent::MainComponent()
         UpdateBinaryStrings();
     };
 
-    addAndMakeVisible(m_ocaONoTextEditor.get());
-    addAndMakeVisible(m_ocaClassComboBox.get());
-    addAndMakeVisible(m_ocaPropertyComboBox.get());
-    addAndMakeVisible(m_ocaCommandComboBox.get());
-    addAndMakeVisible(m_ocaCommandTextEditor.get());
-    addAndMakeVisible(m_ocaResponseStatusComboBox.get());
-    addAndMakeVisible(m_ocaResponseTextEditor.get());
-    setSize(640, 600);
+    m_container.addAndMakeVisible(m_ocaONoTextEditor.get());
+    m_container.addAndMakeVisible(m_ocaClassComboBox.get());
+    m_container.addAndMakeVisible(m_ocaPropertyComboBox.get());
+    m_container.addAndMakeVisible(m_ocaCommandComboBox.get());
+    m_container.addAndMakeVisible(m_ocaCommandTextEditor.get());
+    m_container.addAndMakeVisible(m_ocaResponseStatusComboBox.get());
+    m_container.addAndMakeVisible(m_ocaResponseTextEditor.get());
+    setSize(640, 480);
+    setViewedComponent(&m_container, false);
 
     ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
 }
@@ -300,7 +305,7 @@ void MainComponent::CreateValueComponents()
             UpdateBinaryStrings();
         });
     jassert(pComponent); // Missing implementation!
-    addAndMakeVisible(pComponent);
+    m_container.addAndMakeVisible(pComponent);
 
     // Depending on whether the Get, Set, or AddSubscription commands are selected,
     // assign this new component to the correct member variable.
@@ -419,9 +424,18 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
+    // The height of the container component within the Viewport depends on how much 
+    // content needs to be displayed. So m_container grows as more components are required. 
+    int containerHeight = ContainerComponentDefaultHeight;
+    if (m_ocaNotificationTextEditor)
+        containerHeight += 140;
+
+    // Remove a margin to account for the vertical scrollbar.
+    m_container.setBounds(0, 0, getLocalBounds().getWidth() - 8, containerHeight);
+    auto bounds = m_container.getLocalBounds();
+
     int margin = 2;
     int controlHeight = 40;
-    auto bounds = getLocalBounds();
     int comboBoxWidth = bounds.getWidth() / 5;
     auto titleBounds = bounds.removeFromTop(controlHeight * 2);
 
@@ -483,4 +497,7 @@ void MainComponent::resized()
         auto ocaNotificationBounds = bounds.removeFromTop(controlHeight * 2);
         m_ocaNotificationTextEditor->setBounds(ocaNotificationBounds.reduced(margin));
     }
+
+    // Call base class implementation which takes care of updating scrollbars etc.
+    return juce::Viewport::resized();
 }
