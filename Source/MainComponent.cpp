@@ -365,9 +365,9 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
         jassert(responseParamData.size() > 0);
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
-                                                            prop.m_type, 
-                                                            prop.m_defLevel, 
-                                                            prop.m_getMethodIdx);
+                                                            static_cast<std::uint16_t>(prop.m_type),
+                                                            static_cast<std::uint16_t>(prop.m_defLevel),
+                                                            static_cast<std::uint16_t>(prop.m_getMethodIdx));
     }
     else if (prop.m_setMethodIdx == methodIdx)
     {
@@ -375,23 +375,23 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
         jassert(commandParamData.size() > 0);
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
-                                                            prop.m_type, 
-                                                            prop.m_defLevel, 
-                                                            prop.m_setMethodIdx, 
+                                                            static_cast<std::uint16_t>(prop.m_type), 
+                                                            static_cast<std::uint16_t>(prop.m_defLevel), 
+                                                            static_cast<std::uint16_t>(prop.m_setMethodIdx), 
                                                             1, /* paramCount */ 
                                                             commandParamData);
     }
     else if (methodIdx == MethodIndexForAddSubscription)
     {
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno,
-                                                            prop.m_type,
-                                                            prop.m_defLevel,
-                                                            prop.m_index).AddSubscriptionCommand();
+                                                            static_cast<std::uint16_t>(prop.m_type),
+                                                            static_cast<std::uint16_t>(prop.m_defLevel),
+                                                            static_cast<std::uint16_t>(prop.m_index)).AddSubscriptionCommand();
 
         auto notificationParamData = m_ocaObject->CreateParamDataForComponent(m_ocaNotificationValueComponent.get(), prop);
         auto notificationMemBlock = NanoOcp1::Ocp1Notification(targetOno, 
-                                                               prop.m_defLevel, 
-                                                               prop.m_index, 
+                                                               static_cast<std::uint16_t>(prop.m_defLevel),
+                                                               static_cast<std::uint16_t>(prop.m_index),
                                                                1 /* paramCount */, 
                                                                notificationParamData).GetMemoryBlock();
         notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
