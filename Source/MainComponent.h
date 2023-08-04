@@ -101,17 +101,11 @@ private:
     // ComboBox to select AES70/OCA command
     std::unique_ptr<juce::ComboBox> m_ocaCommandComboBox;
 
-    // Label above the m_ocaCommandTextEditor
-    std::unique_ptr<juce::Label> m_ocaCommandLabel;
-
     // Component to enter values for Set methods
     std::unique_ptr<juce::Component> m_ocaSetCommandValueComponent;
 
     // TextEditor to display AES70/OCA command
     std::unique_ptr<juce::TextEditor> m_ocaCommandTextEditor;
-
-    // Label above the m_ocaResponseTextEditor
-    std::unique_ptr<juce::Label> m_ocaResponseLabel;
 
     // ComboBox to select AES70/OCA response status
     std::unique_ptr<juce::ComboBox> m_ocaResponseStatusComboBox;
@@ -121,6 +115,9 @@ private:
 
     // TextEditor to display AES70/OCA response
     std::unique_ptr<juce::TextEditor> m_ocaResponseTextEditor;
+
+    // Labels on the UI
+    std::vector<std::unique_ptr<juce::Label>> m_ocaLabels;
 
     // AES70/OCA object representing the current configuraion on the GUI
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;

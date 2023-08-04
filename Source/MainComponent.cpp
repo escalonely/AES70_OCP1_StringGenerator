@@ -30,15 +30,43 @@ SOFTWARE.
 #include "MainComponent.h"
 #include "AES70.h"
 
+/**
+ * Command index used for AddSubscription.
+ */
+static constexpr int MethodIndexForAddSubscription = 100;
 
-static constexpr int WorkflowStepEnterOno = 1;
-static constexpr int WorkflowStepSelectClass = 2;
-static constexpr int WorkflowStepSelectProperty = 3;
-static constexpr int WorkflowStepSelectCommand = 4;
-static constexpr int WorkflowStepEnterSetValue = 5;
-static constexpr int WorkflowStepEnterResponseStatus = 6;
-static constexpr int WorkflowStepEnterResponseValue = 7;
+/**
+ * Expected user workflow, separated in discrete steps.
+ */
+enum WorkflowSteps
+{
+    WORKFLOW_STEP_ENTER_ONO = 1,
+    WORKFLOW_STEP_SELECT_CLASS,
+    WORKFLOW_STEP_SELECT_PROPERTY,
+    WORKFLOW_STEP_SELECT_COMMAND,
+    WORKFLOW_STEP_ENTER_SET_VALUE,
+    WORKFLOW_STEP_ENTER_RESPONSE_STATUS,
+    WORKFLOW_STEP_ENTER_RESPONSE_VALUE,
+};
 
+/**
+ * Indeces of juce::Label components used on the GUI.
+ */
+enum GuiLabels
+{
+    LABELIDX_TITLE = 0,
+    LABELIDX_ONO,
+    LABELIDX_CLASS,
+    LABELIDX_PROP,
+    LABELIDX_COMMAND,
+    LABELIDX_CMD_STRING,
+    LABELIDX_CMD_VALUE,
+    LABELIDX_RESP_STRING,
+    LABELIDX_RESP_STATUS,
+    LABELIDX_RESP_VALUE,
+    LABELIDX_NOTIF_STRING,
+    LABELIDX_MAX,
+};
 
 MainComponent::MainComponent()
 {
@@ -57,17 +85,11 @@ MainComponent::MainComponent()
     m_ocaCommandComboBox = std::make_unique<juce::ComboBox>("OCA Command");
     m_ocaCommandComboBox->setHasFocusOutline(true);
 
-    m_ocaCommandLabel = std::make_unique<juce::Label>("OCA Command Label");
-    m_ocaCommandLabel->setJustificationType(juce::Justification::centredLeft);
-
     m_ocaCommandTextEditor = std::make_unique<juce::TextEditor>("OCA Command String");
     m_ocaCommandTextEditor->setHasFocusOutline(true);
     m_ocaCommandTextEditor->setReadOnly(true);
     m_ocaCommandTextEditor->setCaretVisible(false);
     m_ocaCommandTextEditor->setMultiLine(true, true);
-
-    m_ocaResponseLabel = std::make_unique<juce::Label>("OCA Response Label");
-    m_ocaResponseLabel->setJustificationType(juce::Justification::centredLeft);
 
     m_ocaResponseStatusComboBox = std::make_unique<juce::ComboBox>("OCA Response Status");
     m_ocaResponseStatusComboBox->setHasFocusOutline(true);
@@ -81,6 +103,13 @@ MainComponent::MainComponent()
     m_ocaResponseTextEditor->setCaretVisible(false);
     m_ocaResponseTextEditor->setMultiLine(true, true);
 
+    for (int labelIdx = 0; labelIdx < LABELIDX_MAX; labelIdx++)
+    {
+        m_ocaLabels.emplace_back(std::make_unique<juce::Label>("OCA Label " + juce::String(labelIdx)));
+        m_ocaLabels.back()->setJustificationType(juce::Justification::bottomLeft);
+        addAndMakeVisible(m_ocaLabels.back().get());
+    }
+
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
         m_ocaClassComboBox->addItem(AES70::MapOfClassNames.at(classIdx), classIdx);
@@ -93,7 +122,7 @@ MainComponent::MainComponent()
 
     m_ocaClassComboBox->onChange = [=]()
     {
-        ResetComponents(WorkflowStepSelectClass);
+        ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
 
         m_ocaObject.reset();
         int classIdx = m_ocaClassComboBox->getSelectedId();
@@ -114,34 +143,38 @@ MainComponent::MainComponent()
 
     m_ocaPropertyComboBox->onChange = [=]()
     {
-        ResetComponents(WorkflowStepSelectProperty);
+        ResetComponents(WORKFLOW_STEP_SELECT_PROPERTY);
 
         int propIdx = m_ocaPropertyComboBox->getSelectedId();
         if (propIdx > 0)
         {
             auto propertyList = m_ocaObject->GetProperties();
             auto& prop = propertyList.at(propIdx - 1);
-            bool enable(false);
+            //bool enable(false);
 
             if (prop.m_getMethodIdx != 0)
             {
                 juce::String cmdName = juce::String(prop.m_getMethodIdx) + ": GetValue";
                 m_ocaCommandComboBox->addItem(cmdName, prop.m_getMethodIdx);
-                enable = true;
+                //enable = true;
             }
             if (prop.m_setMethodIdx != 0)
             {
                 juce::String cmdName = juce::String(prop.m_setMethodIdx) + ": SetValue";
                 m_ocaCommandComboBox->addItem(cmdName, prop.m_setMethodIdx);
-                enable = true;
+                //enable = true;
             }
-            m_ocaCommandComboBox->setEnabled(enable);
+
+            // TODO
+            m_ocaCommandComboBox->addSeparator();
+            m_ocaCommandComboBox->addItem("AddSubscription", MethodIndexForAddSubscription);
+            m_ocaCommandComboBox->setEnabled(true);
         }
     };
 
     m_ocaCommandComboBox->onChange = [=]()
     {
-        ResetComponents(WorkflowStepSelectCommand);
+        ResetComponents(WORKFLOW_STEP_SELECT_COMMAND);
         CreateValueComponents();
         UpdateBinaryStrings();
     };
@@ -155,14 +188,12 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_ocaClassComboBox.get());
     addAndMakeVisible(m_ocaPropertyComboBox.get());
     addAndMakeVisible(m_ocaCommandComboBox.get());
-    addAndMakeVisible(m_ocaCommandLabel.get());
     addAndMakeVisible(m_ocaCommandTextEditor.get());
-    addAndMakeVisible(m_ocaResponseLabel.get());
     addAndMakeVisible(m_ocaResponseStatusComboBox.get());
     addAndMakeVisible(m_ocaResponseTextEditor.get());
     setSize(640, 480);
 
-    ResetComponents(WorkflowStepSelectClass);
+    ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
 }
 
 MainComponent::~MainComponent()
@@ -173,11 +204,15 @@ void MainComponent::ResetComponents(int step)
 {
     m_ocaCommandTextEditor->clear();
     m_ocaResponseTextEditor->clear();
-    if (step < WorkflowStepEnterSetValue)
+    if (step < WORKFLOW_STEP_ENTER_SET_VALUE)
     {
         // Reset labels to show the default text
-        m_ocaCommandLabel->setText("Use the following binary string to execute the selected command.", juce::dontSendNotification);
-        m_ocaResponseLabel->setText("The following command can be expected.", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_ONO)->setText("ONo:", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_CLASS)->setText("Class:", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_PROP)->setText("Property:", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_COMMAND)->setText("Command:", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_CMD_STRING)->setText("Use the following binary string to execute the selected command.", juce::dontSendNotification);
+        m_ocaLabels.at(LABELIDX_RESP_STRING)->setText("The following command can be expected.", juce::dontSendNotification);
 
         // Reset status back to OK
         m_ocaResponseStatusComboBox->setSelectedId(1, juce::dontSendNotification);
@@ -194,20 +229,20 @@ void MainComponent::ResetComponents(int step)
             m_ocaResponseValueComponent.reset();
         }
     }
-    if (step < WorkflowStepSelectCommand)
+    if (step < WORKFLOW_STEP_SELECT_COMMAND)
     {
         m_ocaCommandComboBox->clear();
         m_ocaCommandComboBox->setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaCommandComboBox->setEnabled(false);
         m_ocaResponseStatusComboBox->setEnabled(false);
     }
-    if (step < WorkflowStepSelectProperty)
+    if (step < WORKFLOW_STEP_SELECT_PROPERTY)
     {
         m_ocaPropertyComboBox->clear();
         m_ocaPropertyComboBox->setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaPropertyComboBox->setEnabled(false);
     }
-    if (step < WorkflowStepSelectClass)
+    if (step < WORKFLOW_STEP_SELECT_CLASS)
     {
         m_ocaClassComboBox->clear();
         m_ocaClassComboBox->setSelectedItemIndex(0, juce::dontSendNotification);
@@ -301,7 +336,7 @@ bool MainComponent::CreateCommandAndResponseStrings(juce::String& commandString,
     }
 
     std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor->getText().getIntValue());
-    std::uint8_t responseStatus = static_cast<std::uint32_t>(m_ocaResponseStatusComboBox->getSelectedId() - 1);
+    std::uint8_t responseStatus = static_cast<std::uint8_t>(m_ocaResponseStatusComboBox->getSelectedId() - 1);
 
     std::uint32_t handle; // TODO: make handle settable
     commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, prop.m_type, prop.m_defLevel, prop.m_setMethodIdx, commandParamCount, commandParamData);
@@ -328,10 +363,21 @@ void MainComponent::resized()
     int margin = 2;
     int controlHeight = 40;
     auto bounds = getLocalBounds();
-    auto titleBounds = bounds.removeFromTop(controlHeight * 3);
-    auto ocaComboBoxesBounds = bounds.removeFromTop(controlHeight);
-
     int comboBoxWidth = bounds.getWidth() / 5;
+    auto titleBounds = bounds.removeFromTop(controlHeight * 2);
+
+    auto firstLabelRowBounds = bounds.removeFromTop(controlHeight);
+    auto ocaONoLabelBounds = firstLabelRowBounds.removeFromLeft(comboBoxWidth);
+    auto ocaClassLabelBounds = firstLabelRowBounds.removeFromLeft(comboBoxWidth * 2);
+    auto ocaPropertyLabelBounds = firstLabelRowBounds.removeFromLeft(comboBoxWidth);
+    auto ocaCommandLabelBounds = firstLabelRowBounds.removeFromLeft(comboBoxWidth);
+
+    m_ocaLabels.at(LABELIDX_ONO)->setBounds(ocaONoLabelBounds.reduced(margin));
+    m_ocaLabels.at(LABELIDX_CLASS)->setBounds(ocaClassLabelBounds.reduced(margin));
+    m_ocaLabels.at(LABELIDX_PROP)->setBounds(ocaPropertyLabelBounds.reduced(margin));
+    m_ocaLabels.at(LABELIDX_COMMAND)->setBounds(ocaCommandLabelBounds.reduced(margin));
+
+    auto ocaComboBoxesBounds = bounds.removeFromTop(controlHeight);
     auto ocaONoTextEditorBounds = ocaComboBoxesBounds.removeFromLeft(comboBoxWidth);
     auto ocaClassComboBoxBounds = ocaComboBoxesBounds.removeFromLeft(comboBoxWidth * 2);
     auto ocaPropertyComboBoxBounds = ocaComboBoxesBounds.removeFromLeft(comboBoxWidth);
@@ -343,9 +389,9 @@ void MainComponent::resized()
     m_ocaCommandComboBox->setBounds(ocaCommandComboBoxBounds.reduced(margin));
 
     bounds.removeFromTop(controlHeight / 2); // Spacer
-    auto ocaCommandLabelBounds = bounds.removeFromTop(controlHeight);
-    auto ocaSetCommandValueBounds = ocaCommandLabelBounds.removeFromRight(comboBoxWidth);
-    m_ocaCommandLabel->setBounds(ocaCommandLabelBounds.reduced(margin));
+    auto ocaCommandStringLabelBounds = bounds.removeFromTop(controlHeight);
+    auto ocaSetCommandValueBounds = ocaCommandStringLabelBounds.removeFromRight(comboBoxWidth);
+    m_ocaLabels.at(LABELIDX_CMD_STRING)->setBounds(ocaCommandStringLabelBounds.reduced(margin));
     if (m_ocaSetCommandValueComponent)
         m_ocaSetCommandValueComponent->setBounds(ocaSetCommandValueBounds.reduced(margin));
 
@@ -356,7 +402,7 @@ void MainComponent::resized()
     auto ocaResponseLabelBounds = bounds.removeFromTop(controlHeight);
     auto ocaResponseValueBounds = ocaResponseLabelBounds.removeFromRight(comboBoxWidth);
     auto ocaResponseStatusComboBoxBounds = ocaResponseLabelBounds.removeFromRight(comboBoxWidth);
-    m_ocaResponseLabel->setBounds(ocaResponseLabelBounds.reduced(margin));
+    m_ocaLabels.at(LABELIDX_RESP_STRING)->setBounds(ocaResponseLabelBounds.reduced(margin));
     m_ocaResponseStatusComboBox->setBounds(ocaResponseStatusComboBoxBounds.reduced(margin));
     if (m_ocaResponseValueComponent)
         m_ocaResponseValueComponent->setBounds(ocaResponseValueBounds.reduced(margin));
