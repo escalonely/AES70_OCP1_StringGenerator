@@ -95,39 +95,51 @@ private:
     juce::Component m_container;
 
     // TextEditor to enter the AES70/OCA object number
-    std::unique_ptr<juce::TextEditor> m_ocaONoTextEditor;
+    juce::TextEditor m_ocaONoTextEditor;
 
     // ComboBox to select AES70/OCA class
-    std::unique_ptr<juce::ComboBox> m_ocaClassComboBox;
+    juce::ComboBox m_ocaClassComboBox;
 
     // ComboBox to select AES70/OCA class property
-    std::unique_ptr<juce::ComboBox> m_ocaPropertyComboBox;
+    juce::ComboBox m_ocaPropertyComboBox;
+
+    // ComboBox to display the definition level of the selected AES70/OCA class property
+    juce::ComboBox m_ocaPropertyDefLevelComboBox;
+
+    // ComboBox to display the datatype of the selected AES70/OCA class property
+    juce::ComboBox m_ocaPropertyParamTypeComboBox;
+
+    // TextEditor to set the handle of the AES70/OCA Command to send
+    juce::TextEditor m_ocaCommandHandleTextEditor;
 
     // ComboBox to select the AES70/OCA Command to send
-    std::unique_ptr<juce::ComboBox> m_ocaCommandComboBox;
+    juce::ComboBox m_ocaCommandComboBox;
+
+    // ComboBox to display the definition level of the selected AES70/OCA command
+    juce::ComboBox m_ocaCommandDefLevelComboBox;
 
     // Component to enter values for Set methods
     std::unique_ptr<juce::Component> m_ocaSetCommandValueComponent;
 
     // TextEditor to display the AES70/OCA Command to send
-    std::unique_ptr<juce::TextEditor> m_ocaCommandTextEditor;
+    juce::TextEditor m_ocaCommandTextEditor;
 
     // ComboBox to select the AES70/OCA Response status
-    std::unique_ptr<juce::ComboBox> m_ocaResponseStatusComboBox;
+    juce::ComboBox m_ocaResponseStatusComboBox;
 
     // Component to enter values for the Get method Response message
     std::unique_ptr<juce::Component> m_ocaResponseValueComponent;
 
     // TextEditor to display the AES70/OCA Response message
-    std::unique_ptr<juce::TextEditor> m_ocaResponseTextEditor;
+    juce::TextEditor m_ocaResponseTextEditor;
 
     // Component to enter values for Notifications
     std::unique_ptr<juce::Component> m_ocaNotificationValueComponent;
 
     // TextEditor to display AES70/OCA Notification messages
-    std::unique_ptr<juce::TextEditor> m_ocaNotificationTextEditor;
+    juce::TextEditor m_ocaNotificationTextEditor;
 
-    // Labels on the UI
+    // Labels on the UI. NOTE: use a vector of pointers because juce::Label is non-copyable.
     std::vector<std::unique_ptr<juce::Label>> m_ocaLabels;
 
     // AES70/OCA object representing the current configuraion on the GUI

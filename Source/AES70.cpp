@@ -152,6 +152,11 @@ OcaRoot* OcaRoot::Create(int classIdx)
     return obj;
 }
 
+OcaRoot* OcaRoot::CreateCustom()
+{
+    return new OcaCustomClass();
+}
+
 
 //==============================================================================
 // Class OcaWorker
@@ -417,6 +422,47 @@ std::vector<std::uint8_t> OcaGain::CreateParamDataForComponent(const juce::Compo
 // Class OcaAgent
 //==============================================================================
 
+//==============================================================================
+// Class OcaCustomClass
+//==============================================================================
+
+int OcaCustomClass::DefLevel() const
+{
+    return m_defLevel;
+}
+
+std::vector<Property> OcaCustomClass::GetProperties() const
+{
+    return OcaRoot::GetProperties();
+}
+
+juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    juce::Component* ret(nullptr);
+
+    switch (prop.m_type)
+    {
+    default:
+        break;
+    }
+
+    jassert(ret); // Missing implementation!
+    return ret;
+}
+
+std::vector<std::uint8_t> OcaCustomClass::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    std::vector<std::uint8_t> ret;
+
+    switch (prop.m_type)
+    {
+    default:
+        break;
+    }
+
+    jassert(ret.size() > 0); // Missing implementation!
+    return ret;
+}
 
 
 }

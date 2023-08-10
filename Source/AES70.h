@@ -116,7 +116,16 @@ struct OcaRoot
      *          is responsibility of the caller of the method. 
      */
     static OcaRoot* Create(int classIdx);
- 
+
+    /**
+     * Factory method to create a custom / proprietary / non-standard AES70 object.
+     *
+     * @param[in] TODO
+     * @return  A pointer to an OcaRoot-related object. NOTE: Ownership of the object
+     *          is responsibility of the caller of the method.
+     */
+    static OcaRoot* CreateCustom();
+
     /**
      * Definition level of the AES70 class, where OcaRoot is at level 1 and the level
      * increases with depth in the inheritance tree.
@@ -462,6 +471,19 @@ struct OcaAgent : public OcaRoot
             });
         return ret;
     }
+};
+
+/**
+ * OcaCustomClass
+ */
+struct OcaCustomClass : public OcaRoot
+{
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
+
+    int m_defLevel; // User-defined definition level
 };
 
 }
