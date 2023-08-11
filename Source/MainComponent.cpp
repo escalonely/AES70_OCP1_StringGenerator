@@ -45,10 +45,9 @@ static constexpr int ClassIndexForCustomClass = 256;
  */
 static constexpr int ContainerComponentDefaultHeight = 480;
 
-static const juce::Colour AppBackgroundColour(43, 65, 77);  // TODO
-static const juce::Colour LabelEnabledTextColour(125, 182, 212);
-static const juce::Colour LabelDisabledTextColour(12, 12, 12);
-
+static const juce::Colour AppBackgroundColour(43, 65, 77);          // App window background color
+static const juce::Colour LabelEnabledTextColour(125, 182, 212);    // Color for labels of relevant controls
+static const juce::Colour LabelDisabledTextColour(12, 12, 12);      // Color for labels of non-relevant controls
 
 /**
  * Expected user workflow, separated in discrete steps.
@@ -72,9 +71,9 @@ enum GuiLabels
     LABELIDX_TITLE = 0,
     LABELIDX_CLASS,
     LABELIDX_ONO,
-    LABELIDX_PROP,              // "Property"
-    LABELIDX_PROP_DEFLEVEL,     // "PropDefLevel"
-    LABELIDX_PROP_PARAMTYPE,    // "PropParamType"
+    LABELIDX_PROP,          
+    LABELIDX_PROP_DEFLEVEL, 
+    LABELIDX_PROP_PARAMTYPE,
     LABELIDX_CMD,
     LABELIDX_CMD_DEFLEVEL,
     LABELIDX_CMD_HANDLE,
@@ -83,6 +82,26 @@ enum GuiLabels
     LABELIDX_RESP_VALUE,
     LABELIDX_NOTIF_VALUE,
     LABELIDX_MAX,
+};
+
+/**
+ * Text content for all juce::Label components used on the GUI.
+ */
+static const std::vector<juce::String> GuiLabelsText = {
+    /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator",
+    /* LABELIDX_CLASS,             */ "Class:",
+    /* LABELIDX_ONO,               */ "ONo:",
+    /* LABELIDX_PROP,              */ "Property:",
+    /* LABELIDX_PROP_DEFLEVEL,     */ "Prop Def Level:",
+    /* LABELIDX_PROP_PARAMTYPE,    */ "Prop Type:",
+    /* LABELIDX_CMD,               */ "Command:",
+    /* LABELIDX_CMD_DEFLEVEL,      */ "Cmd Def Level:",
+    /* LABELIDX_CMD_HANDLE,        */ "Cmd Handle:",
+    /* LABELIDX_CMD_SET_VALUE,     */ "Cmd Set Value:",
+    /* LABELIDX_RESP_STATUS,       */ "Response Status:",
+    /* LABELIDX_RESP_VALUE,        */ "Response Value:",
+    /* LABELIDX_NOTIF_VALUE,       */ "Notif Value:",
+    /* LABELIDX_MAX,               */ "MAX"
 };
 
 MainComponent::MainComponent()
@@ -165,23 +184,9 @@ MainComponent::MainComponent()
         if (labelIdx < LABELIDX_ONO)
             m_ocaLabels.at(labelIdx)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
 
+        m_ocaLabels.at(labelIdx)->setText(GuiLabelsText.at(labelIdx), juce::dontSendNotification);
         m_container.addAndMakeVisible(m_ocaLabels.back().get());
     }
-
-    // TODO: move this to loop
-    m_ocaLabels.at(LABELIDX_TITLE)->setText("AES70 OCP.1 binary string generator", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_ONO)->setText("ONo:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_CLASS)->setText("Class:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_PROP)->setText("Property:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_PROP_DEFLEVEL)->setText("PropDefLevel:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setText("PropParamType:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_CMD)->setText("Command:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_CMD_DEFLEVEL)->setText("CmdDefLevel:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setText("CmdHandle:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setText("CmdSetValue:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_RESP_STATUS)->setText("Response Status:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_RESP_VALUE)->setText("Response Value:", juce::dontSendNotification);
-    m_ocaLabels.at(LABELIDX_NOTIF_VALUE)->setText("Notif Value:", juce::dontSendNotification);
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
@@ -268,9 +273,13 @@ MainComponent::MainComponent()
 
                 // Update m_ocaPropertyDefLevelComboBox to display the definiton level  
                 // of the selected Property (Read-only!)
-                m_ocaPropertyDefLevelComboBox.addItem(juce::String(prop.m_index), prop.m_index);
-                m_ocaPropertyDefLevelComboBox.setSelectedId(prop.m_index, juce::dontSendNotification);
-                m_ocaPropertyDefLevelComboBox.setEnabled(false);
+                m_ocaPropertyDefLevelComboBox.addItem(juce::String(prop.m_defLevel), prop.m_defLevel);
+                m_ocaPropertyDefLevelComboBox.setSelectedId(prop.m_defLevel, juce::dontSendNotification);
+
+                // Update m_ocaPropertyParamTypeComboBox to display the data type
+                // of the selected Property (Read-only!)
+                m_ocaPropertyParamTypeComboBox.addItem("uint8", 1); // TODO: get type from prop.
+                m_ocaPropertyParamTypeComboBox.setSelectedId(1, juce::dontSendNotification);
             }
 
             // Custom AES70 class is selected.
@@ -283,17 +292,23 @@ MainComponent::MainComponent()
                     m_ocaCommandComboBox.addItem("Command " + juce::String(commandIdx), 
                                                  commandIdx);
                 }
-                m_ocaCommandComboBox.setSelectedId(1, juce::dontSendNotification);
 
                 // Fill m_ocaPropertyDefLevelComboBox with dummy definition levels
                 // and then enable it to allow user changes.
                 for (int propDefLevel = 1; propDefLevel < 16; propDefLevel++)
                 {
-                    m_ocaPropertyDefLevelComboBox.addItem("DefLevel " + juce::String(propDefLevel),
-                                                          propDefLevel);
+                    m_ocaPropertyDefLevelComboBox.addItem(juce::String(propDefLevel), propDefLevel);
                 }
                 m_ocaPropertyDefLevelComboBox.setEnabled(true);
                 m_ocaLabels.at(LABELIDX_PROP_DEFLEVEL)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
+
+                // Add available data types to m_ocaPropertyParamTypeComboBox and allow user changes.
+                for (int dataTypeIdx = 1; dataTypeIdx < 16; dataTypeIdx++) // TODO: iterate all data types
+                {
+                    juce::String dataTypeName = "uint8 " + juce::String(dataTypeIdx);
+                    m_ocaPropertyParamTypeComboBox.addItem(dataTypeName, dataTypeIdx);
+                }
+                m_ocaPropertyParamTypeComboBox.setEnabled(true);
                 m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
             }
 
@@ -326,15 +341,8 @@ MainComponent::MainComponent()
 
                     // Update m_ocaCommandDefLevelComboBox to display the definiton level  
                     // of the selected Property (Read-only!)
-                    m_ocaCommandDefLevelComboBox.addItem(juce::String(prop.m_index), prop.m_index);
-                    m_ocaCommandDefLevelComboBox.setSelectedId(prop.m_index, juce::dontSendNotification);
-                    m_ocaCommandDefLevelComboBox.setEnabled(false);
-
-                    // Update m_ocaPropertyParamTypeComboBox to display the data type
-                    // of the selected Property (Read-only!)
-                    m_ocaPropertyParamTypeComboBox.addItem("uint8", 1); // TODO: get type from prop.
-                    m_ocaPropertyParamTypeComboBox.setSelectedId(1, juce::dontSendNotification);
-                    m_ocaPropertyParamTypeComboBox.setEnabled(false);
+                    m_ocaCommandDefLevelComboBox.addItem(juce::String(prop.m_defLevel), prop.m_defLevel);
+                    m_ocaCommandDefLevelComboBox.setSelectedId(prop.m_defLevel, juce::dontSendNotification);
                 }
 
                 // Custom AES70 class is selected.
@@ -343,18 +351,9 @@ MainComponent::MainComponent()
                     // Add dummy DefLevels to m_ocaCommandDefLevelComboBox and allow user changes.
                     for (int cmdDefLevel = 1; cmdDefLevel < 16; cmdDefLevel++)
                     {
-                        juce::String cmdDefLevelName = "DefLevel " + juce::String(cmdDefLevel);
-                        m_ocaCommandDefLevelComboBox.addItem(cmdDefLevelName, cmdDefLevel);
+                        m_ocaCommandDefLevelComboBox.addItem(juce::String(cmdDefLevel), cmdDefLevel);
                     }
                     m_ocaCommandDefLevelComboBox.setEnabled(true);
-
-                    // Add available data types to m_ocaPropertyParamTypeComboBox and allow user changes.
-                    for (int dataTypeIdx = 1; dataTypeIdx < 16; dataTypeIdx++) // TODO: iterate all data types
-                    {
-                        juce::String dataTypeName = "uint8 " + juce::String(dataTypeIdx);
-                        m_ocaPropertyParamTypeComboBox.addItem(dataTypeName, dataTypeIdx);
-                    }
-                    m_ocaPropertyParamTypeComboBox.setEnabled(true);
                 }
             }
 
@@ -386,6 +385,9 @@ MainComponent::~MainComponent()
 
 void MainComponent::ResetComponents(int step)
 {
+    DBG("ResetComponents step " + juce::String(step));
+
+    bool resizeNeeded(false);
     m_ocaCommandTextEditor.clear();
     m_ocaResponseTextEditor.clear();
     if (step < WORKFLOW_STEP_ENTER_SET_VALUE)
@@ -410,47 +412,50 @@ void MainComponent::ResetComponents(int step)
             m_ocaNotificationValueComponent.reset();
         }
 
-        // Hide the TextEditor for displaying Notification messages.
-        //if (m_ocaNotificationTextEditor)
+        m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setVisible(false);
+        m_ocaLabels.at(LABELIDX_RESP_VALUE)->setVisible(false);
+        m_ocaLabels.at(LABELIDX_NOTIF_VALUE)->setVisible(false);
+
+        m_ocaCommandDefLevelComboBox.clear();
+        m_ocaCommandDefLevelComboBox.setEnabled(false);
+
+        if (m_ocaNotificationTextEditor.isVisible())
         {
-            //this->removeChildComponent(m_ocaNotificationTextEditor.get());
-            //m_ocaNotificationTextEditor.reset();
             m_ocaNotificationTextEditor.setVisible(false);
+            resizeNeeded = true;
         }
     }
     if (step < WORKFLOW_STEP_SELECT_COMMAND)
     {
+        m_ocaPropertyDefLevelComboBox.clear();
+        m_ocaPropertyDefLevelComboBox.setEnabled(false);
+        m_ocaPropertyParamTypeComboBox.clear();
+        m_ocaPropertyParamTypeComboBox.setEnabled(false);
         m_ocaCommandComboBox.clear();
-        m_ocaCommandComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaCommandComboBox.setEnabled(false);
-        m_ocaCommandDefLevelComboBox.clear();
-        m_ocaCommandDefLevelComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
-        m_ocaCommandDefLevelComboBox.setEnabled(false);
+        //m_ocaCommandHandleTextEditor.setEnabled(false); // TODO: looks crappy
         m_ocaResponseStatusComboBox.setEnabled(false);
+        m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setColour(juce::Label::textColourId, LabelDisabledTextColour);
+        m_ocaLabels.at(LABELIDX_RESP_STATUS)->setColour(juce::Label::textColourId, LabelDisabledTextColour);
     }
     if (step < WORKFLOW_STEP_SELECT_PROPERTY)
     {
         m_ocaPropertyComboBox.clear();
-        m_ocaPropertyComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaPropertyComboBox.setEnabled(false);
-        m_ocaPropertyDefLevelComboBox.clear();
-        m_ocaPropertyDefLevelComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
-        m_ocaPropertyDefLevelComboBox.setEnabled(false);
-        m_ocaPropertyParamTypeComboBox.clear();
-        m_ocaPropertyParamTypeComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
-        m_ocaPropertyParamTypeComboBox.setEnabled(false);
-        m_ocaCommandHandleTextEditor.setEnabled(false);
 
-        // Disable initially all labels starting with LABELIDX_PROP 
+        // Disable initially all labels starting with LABELIDX_ONO 
         for (int labelIdx = LABELIDX_ONO; labelIdx < LABELIDX_MAX; labelIdx++)
             m_ocaLabels.at(labelIdx)->setColour(juce::Label::textColourId, LabelDisabledTextColour);
     }
     if (step < WORKFLOW_STEP_SELECT_CLASS)
     {
         m_ocaClassComboBox.clear();
-        m_ocaClassComboBox.setSelectedItemIndex(0, juce::dontSendNotification);
         m_ocaClassComboBox.setEnabled(false);
     }
+
+    // Hiding or removing components may change the size of the m_container in the Viewport.
+    if (resizeNeeded)
+        resized();
 }
 
 void MainComponent::CreateValueComponents()
@@ -481,17 +486,25 @@ void MainComponent::CreateValueComponents()
     if (prop.m_getMethodIdx == methodIdx)
     {
         m_ocaResponseValueComponent = std::unique_ptr<juce::Component>(pComponent);
+        m_ocaLabels.at(LABELIDX_RESP_VALUE)->setVisible(true);
+        m_ocaLabels.at(LABELIDX_RESP_VALUE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
     }
     else if (prop.m_setMethodIdx == methodIdx)
     {
         m_ocaSetCommandValueComponent = std::unique_ptr<juce::Component>(pComponent);
+        m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setVisible(true);
+        m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
     }
     else if (methodIdx == MethodIndexForAddSubscription)
     {
         m_ocaNotificationValueComponent = std::unique_ptr<juce::Component>(pComponent);
+        m_ocaLabels.at(LABELIDX_NOTIF_VALUE)->setVisible(true);
+        m_ocaLabels.at(LABELIDX_NOTIF_VALUE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
     }
 
     m_ocaResponseStatusComboBox.setEnabled(true);
+    m_ocaLabels.at(LABELIDX_RESP_STATUS)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
+    m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
 
     resized();
 }
@@ -623,23 +636,29 @@ void MainComponent::resized()
 
     // Row 4
     rowBounds = bounds.removeFromTop(controlHeight);
+    rowBounds.removeFromLeft(comboBoxWidth * 3); // Horizontal spacer
+    m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_ocaPropertyParamTypeComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+
+    // Row 5
+    rowBounds = bounds.removeFromTop(controlHeight);
     m_ocaLabels.at(LABELIDX_CMD)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ocaCommandComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
     m_ocaLabels.at(LABELIDX_CMD_DEFLEVEL)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ocaCommandDefLevelComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
-    // Row 5
-    rowBounds = bounds.removeFromTop(controlHeight);
-    m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-    m_ocaPropertyParamTypeComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
-    m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-    m_ocaCommandHandleTextEditor.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    // Vertical spacer
+    bounds.removeFromTop(controlHeight / 2);
 
     // Row 6
-    rowBounds.removeFromLeft(comboBoxWidth * 3); // Horizontal spacer
+    rowBounds = bounds.removeFromTop(controlHeight);
     m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     if (m_ocaSetCommandValueComponent)
-        m_ocaSetCommandValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+        m_ocaSetCommandValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
+    else
+        rowBounds.removeFromLeft(comboBoxWidth * 2); // Horizontal spacer
+    m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_ocaCommandHandleTextEditor.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
     // Row 7
     rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f));
@@ -650,11 +669,13 @@ void MainComponent::resized()
 
     // Row 8
     rowBounds = bounds.removeFromTop(controlHeight);
-    m_ocaLabels.at(LABELIDX_RESP_STATUS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-    m_ocaResponseStatusComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
     m_ocaLabels.at(LABELIDX_RESP_VALUE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     if (m_ocaResponseValueComponent)
-        m_ocaResponseValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+        m_ocaResponseValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
+    else
+        rowBounds.removeFromLeft(comboBoxWidth * 2); // Horizontal spacer
+    m_ocaLabels.at(LABELIDX_RESP_STATUS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_ocaResponseStatusComboBox.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
     // Row 9
     rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f));
@@ -665,9 +686,8 @@ void MainComponent::resized()
     {
         bounds.removeFromTop(controlHeight / 2); // Vertical spacer
         rowBounds = bounds.removeFromTop(controlHeight); // Row 10
-        rowBounds.removeFromLeft(comboBoxWidth * 3); // Horizontal spacer
         m_ocaLabels.at(LABELIDX_NOTIF_VALUE)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-        m_ocaNotificationValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+        m_ocaNotificationValueComponent->setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
 
         rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f)); // Row 11
         m_ocaNotificationTextEditor.setBounds(rowBounds.reduced(margin));
