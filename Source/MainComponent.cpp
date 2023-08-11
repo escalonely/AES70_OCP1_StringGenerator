@@ -142,6 +142,7 @@ MainComponent::MainComponent()
     m_ocaPropertyParamTypeComboBox.setHasFocusOutline(true);
     m_ocaCommandComboBox.setHasFocusOutline(true);
     m_ocaCommandDefLevelComboBox.setHasFocusOutline(true);
+    m_ocaResponseStatusComboBox.setHasFocusOutline(true);
 
     m_ocaCommandHandleTextEditor.setHasFocusOutline(true);
     m_ocaCommandHandleTextEditor.setInputRestrictions(0, "0123456789");
@@ -153,11 +154,6 @@ MainComponent::MainComponent()
     m_ocaCommandTextEditor.setCaretVisible(false);
     m_ocaCommandTextEditor.setMultiLine(true, true);
     m_ocaCommandTextEditor.setTextToShowWhenEmpty("Use the following binary string to execute the selected Command.", LabelEnabledTextColour);
-
-    m_ocaResponseStatusComboBox.setHasFocusOutline(true);
-    m_ocaResponseStatusComboBox.addItem("0: Ok", 1);
-    m_ocaResponseStatusComboBox.addItem("1: Protocol Version Error", 2);
-    m_ocaResponseStatusComboBox.addItem("2: Device Error", 3); // TODO add remaining statuses
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
     m_ocaResponseTextEditor.setReadOnly(true);
@@ -171,6 +167,13 @@ MainComponent::MainComponent()
     m_ocaNotificationTextEditor.setMultiLine(true, true);
     m_ocaNotificationTextEditor.setVisible(false); // Invisible until AddSubscription Cmd selected
     m_ocaNotificationTextEditor.setTextToShowWhenEmpty("The following Notification can be expected, ...TODO", LabelEnabledTextColour);
+
+    // Add all OCA status and status strings to m_ocaResponseStatusComboBox
+    for (int statusIdx = 0; statusIdx < 16; statusIdx++)
+    {
+        juce::String statusName = juce::String(statusIdx) + ": " + NanoOcp1::StatusToString(static_cast<std::uint8_t>(statusIdx));
+        m_ocaResponseStatusComboBox.addItem(statusName, statusIdx + 1);
+    }
 
     // Create and add all labels on the GUI
     for (int labelIdx = 0; labelIdx < LABELIDX_MAX; labelIdx++)
