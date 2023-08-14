@@ -109,9 +109,6 @@ private:
     // ComboBox to display the datatype of the selected AES70/OCA class property
     juce::ComboBox m_ocaPropertyParamTypeComboBox;
 
-    // TextEditor to set the handle of the AES70/OCA Command to send
-    juce::TextEditor m_ocaCommandHandleTextEditor;
-
     // ComboBox to select the AES70/OCA Command to send
     juce::ComboBox m_ocaCommandComboBox;
 
@@ -120,6 +117,9 @@ private:
 
     // Component to enter values for Set methods
     std::unique_ptr<juce::Component> m_ocaSetCommandValueComponent;
+
+    // TextEditor to set the handle of the AES70/OCA Command to send
+    juce::TextEditor m_ocaCommandHandleTextEditor;
 
     // TextEditor to display the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandTextEditor;

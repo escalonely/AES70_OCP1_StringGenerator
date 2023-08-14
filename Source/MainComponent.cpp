@@ -220,12 +220,6 @@ MainComponent::MainComponent()
                 m_ocaPropertyComboBox.addItem(propName, propIdx);
             }
             m_ocaPropertyComboBox.setEnabled(true);
-
-            // Enable labels
-            m_ocaLabels.at(LABELIDX_ONO)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
-            m_ocaLabels.at(LABELIDX_PROP)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
-            m_ocaLabels.at(LABELIDX_PROP_DEFLEVEL)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
-            m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
         }
         else if (classIdx > 0)
         {
@@ -239,11 +233,11 @@ MainComponent::MainComponent()
                 m_ocaPropertyComboBox.addItem(propName, propIdx + 1);
             }
             m_ocaPropertyComboBox.setEnabled(true);
-
-            // Enable labels
-            m_ocaLabels.at(LABELIDX_ONO)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
-            m_ocaLabels.at(LABELIDX_PROP)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
         }
+
+        // Enable labels
+        m_ocaLabels.at(LABELIDX_ONO)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
+        m_ocaLabels.at(LABELIDX_PROP)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
     };
 
     m_ocaPropertyComboBox.onChange = [=]()
@@ -281,44 +275,83 @@ MainComponent::MainComponent()
 
                 // Update m_ocaPropertyParamTypeComboBox to display the data type
                 // of the selected Property (Read-only!)
-                m_ocaPropertyParamTypeComboBox.addItem("uint8", 1); // TODO: get type from prop.
-                m_ocaPropertyParamTypeComboBox.setSelectedId(1, juce::dontSendNotification);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(prop.m_type), prop.m_type);
+                m_ocaPropertyParamTypeComboBox.setSelectedId(prop.m_type, juce::dontSendNotification);
             }
 
-            // Custom AES70 class is selected.
-            // NOTE: propertyList will be empty.
+            // Custom AES70 class is selected. 
+            // NOTE: propertyList will be empty at this point.
             else
             {
-                // Fill m_ocaCommandComboBox with dummy command indeces.
-                for (int commandIdx = 1; commandIdx < 16; commandIdx++)
-                {
-                    m_ocaCommandComboBox.addItem("Command " + juce::String(commandIdx), 
-                                                 commandIdx);
-                }
-
+                // Manually create a property based on the user's selected settings, 
+                // and assign it to m_ocaObject to use as the single entry in its property list.
+                AES70::Property customProp = { 
+                    1, /*m_defLevel*/ propIdx, /*m_index*/ 1, /*m_type*/
+                    "Custom", /*m_name*/ 0, /*m_getMethodIdx*/ 0 /*m_setMethodIdx*/ 
+                };
+                auto customObj = static_cast<AES70::OcaCustomClass*>(m_ocaObject.get());
+                customObj->m_customProp = customProp;
+                
                 // Fill m_ocaPropertyDefLevelComboBox with dummy definition levels
                 // and then enable it to allow user changes.
                 for (int propDefLevel = 1; propDefLevel < 16; propDefLevel++)
                 {
                     m_ocaPropertyDefLevelComboBox.addItem(juce::String(propDefLevel), propDefLevel);
                 }
+                m_ocaPropertyDefLevelComboBox.setSelectedId(1, juce::dontSendNotification);
                 m_ocaPropertyDefLevelComboBox.setEnabled(true);
                 m_ocaLabels.at(LABELIDX_PROP_DEFLEVEL)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
 
-                // Add available data types to m_ocaPropertyParamTypeComboBox and allow user changes.
-                for (int dataTypeIdx = 1; dataTypeIdx < 16; dataTypeIdx++) // TODO: iterate all data types
-                {
-                    juce::String dataTypeName = "uint8 " + juce::String(dataTypeIdx);
-                    m_ocaPropertyParamTypeComboBox.addItem(dataTypeName, dataTypeIdx);
-                }
+                // Add supported data types defined in NanoOcp1 to m_ocaPropertyParamTypeComboBox and allow user changes.
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_BOOLEAN), NanoOcp1::OCP1DATATYPE_BOOLEAN);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT8), NanoOcp1::OCP1DATATYPE_UINT8);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT16), NanoOcp1::OCP1DATATYPE_UINT16);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT32), NanoOcp1::OCP1DATATYPE_UINT32);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_FLOAT32), NanoOcp1::OCP1DATATYPE_FLOAT32);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_STRING), NanoOcp1::OCP1DATATYPE_STRING);
+                m_ocaPropertyParamTypeComboBox.setSelectedId(NanoOcp1::OCP1DATATYPE_BOOLEAN, juce::dontSendNotification);
                 m_ocaPropertyParamTypeComboBox.setEnabled(true);
                 m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
+
+                // Fill m_ocaCommandComboBox with dummy Get commands
+                for (int commandIdx = 1; commandIdx <= 8; commandIdx++)
+                    m_ocaCommandComboBox.addItem(juce::String(commandIdx) + ": GetValue", commandIdx);
+
+                // Fill m_ocaCommandComboBox with dummy Set commands
+                m_ocaCommandComboBox.addSeparator();
+                for (int commandIdx = 1; commandIdx <= 8; commandIdx++)
+                    m_ocaCommandComboBox.addItem(juce::String(commandIdx) + ": SetValue", commandIdx + 8);
             }
 
             // In addition to the property-related commands, always offer the AddSubscription command.
             m_ocaCommandComboBox.addSeparator();
             m_ocaCommandComboBox.addItem("AddSubscription", MethodIndexForAddSubscription);
             m_ocaCommandComboBox.setEnabled(true);
+        }
+    };
+
+    m_ocaPropertyDefLevelComboBox.onChange = [=]()
+    {
+        if (m_ocaClassComboBox.getSelectedId() == ClassIndexForCustomClass)
+        {
+            // Update the custom property and use it to update the binary strings.
+            auto customObj = static_cast<AES70::OcaCustomClass*>(m_ocaObject.get());
+            customObj->m_customProp.m_defLevel = m_ocaPropertyDefLevelComboBox.getSelectedId();
+
+            UpdateBinaryStrings();
+        }
+    };
+
+    m_ocaPropertyParamTypeComboBox.onChange = [=]()
+    {
+        if (m_ocaClassComboBox.getSelectedId() == ClassIndexForCustomClass)
+        {
+            // Update the custom property and use it to update the binary strings.
+            auto customObj = static_cast<AES70::OcaCustomClass*>(m_ocaObject.get());
+            customObj->m_customProp.m_type = m_ocaPropertyParamTypeComboBox.getSelectedId();
+
+            CreateValueComponents();
+            UpdateBinaryStrings();
         }
     };
 
@@ -356,7 +389,9 @@ MainComponent::MainComponent()
                     {
                         m_ocaCommandDefLevelComboBox.addItem(juce::String(cmdDefLevel), cmdDefLevel);
                     }
+                    m_ocaCommandDefLevelComboBox.setSelectedId(1, juce::dontSendNotification);
                     m_ocaCommandDefLevelComboBox.setEnabled(true);
+                    m_ocaLabels.at(LABELIDX_CMD_DEFLEVEL)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
                 }
             }
 
@@ -369,6 +404,12 @@ MainComponent::MainComponent()
             CreateValueComponents();
             UpdateBinaryStrings();
         }
+    };
+
+    m_ocaCommandDefLevelComboBox.onChange = [=]()
+    {
+        // Update the binary strings.
+        UpdateBinaryStrings();
     };
 
     m_ocaResponseStatusComboBox.onChange = [=]()
@@ -436,7 +477,7 @@ void MainComponent::ResetComponents(int step)
         m_ocaPropertyParamTypeComboBox.setEnabled(false);
         m_ocaCommandComboBox.clear();
         m_ocaCommandComboBox.setEnabled(false);
-        //m_ocaCommandHandleTextEditor.setEnabled(false); // TODO: looks crappy
+        //m_ocaCommandHandleTextEditor.setEnabled(false); // TODO: looks crappy, set style instead
         m_ocaResponseStatusComboBox.setEnabled(false);
         m_ocaLabels.at(LABELIDX_CMD_HANDLE)->setColour(juce::Label::textColourId, LabelDisabledTextColour);
         m_ocaLabels.at(LABELIDX_RESP_STATUS)->setColour(juce::Label::textColourId, LabelDisabledTextColour);
@@ -471,12 +512,31 @@ void MainComponent::CreateValueComponents()
     if (!m_ocaObject)
         return;
 
-    auto propertyList = m_ocaObject->GetProperties();
-    if (propertyList.size() < propIdx)
-        return;
+    AES70::Property prop;
+    bool getMethodSelected(false);
+    bool setMethodSelected(false);
+
+    // Usual case: a standard AES70 class (not proprietary) was selected.
+    if (m_ocaClassComboBox.getSelectedId() != ClassIndexForCustomClass)
+    {
+        auto propertyList = m_ocaObject->GetProperties();
+        if (propertyList.size() < propIdx)
+            return;
+
+        prop = propertyList.at(propIdx - 1);
+        getMethodSelected = (methodIdx == prop.m_getMethodIdx);
+        setMethodSelected = (methodIdx == prop.m_setMethodIdx);
+    }
+
+    // Custom AES70 class is selected. NOTE: GetProperties will return exactly one entry.
+    else
+    {
+        prop = m_ocaObject->GetProperties().back(); 
+        getMethodSelected = (methodIdx <= 8);
+        setMethodSelected = (methodIdx > 8) && (methodIdx <= 16);
+    }
 
     // Create a component appropriate for displaying this properties value.
-    auto& prop = propertyList.at(propIdx - 1);
     auto pComponent = m_ocaObject->CreateComponentForProperty(prop, 
         [this] {
             UpdateBinaryStrings();
@@ -484,15 +544,15 @@ void MainComponent::CreateValueComponents()
     jassert(pComponent); // Missing implementation!
     m_container.addAndMakeVisible(pComponent);
 
-    // Depending on whether the Get, Set, or AddSubscription commands are selected,
-    // assign this new component to the correct member variable.
-    if (prop.m_getMethodIdx == methodIdx)
+    // Depending on whether the Get, Set, or AddSubscription commands are selected, assign this new component 
+    // to the correct member variable. The old component, if any, will be deleted automatically.
+    if (getMethodSelected)
     {
         m_ocaResponseValueComponent = std::unique_ptr<juce::Component>(pComponent);
         m_ocaLabels.at(LABELIDX_RESP_VALUE)->setVisible(true);
         m_ocaLabels.at(LABELIDX_RESP_VALUE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
     }
-    else if (prop.m_setMethodIdx == methodIdx)
+    else if (setMethodSelected)
     {
         m_ocaSetCommandValueComponent = std::unique_ptr<juce::Component>(pComponent);
         m_ocaLabels.at(LABELIDX_CMD_SET_VALUE)->setVisible(true);
@@ -534,11 +594,32 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
     if (!m_ocaObject)
         return false;
 
-    // TODO: Custom AES70 class
+    AES70::Property prop;
+    int commandDefLevel;
+    bool getMethodSelected(false);
+    bool setMethodSelected(false);
 
-    auto propertyList = m_ocaObject->GetProperties();
-    if (propertyList.size() < propIdx)
-        return false;
+    // Usual case: a standard AES70 class (not proprietary) was selected.
+    if (m_ocaClassComboBox.getSelectedId() != ClassIndexForCustomClass)
+    {
+        auto propertyList = m_ocaObject->GetProperties();
+        if (propertyList.size() < propIdx)
+            return false;
+
+        prop = propertyList.at(propIdx - 1);
+        commandDefLevel = prop.m_defLevel;
+        getMethodSelected = (methodIdx == prop.m_getMethodIdx);
+        setMethodSelected = (methodIdx == prop.m_setMethodIdx);
+    }
+
+    // Custom AES70 class is selected. NOTE: GetProperties will return exactly one entry.
+    else
+    {
+        prop = m_ocaObject->GetProperties().back();
+        commandDefLevel = m_ocaCommandDefLevelComboBox.getSelectedId();
+        getMethodSelected = (methodIdx <= 8);
+        setMethodSelected = (methodIdx > 8) && (methodIdx <= 16);
+    }
 
     std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor.getText().getIntValue());
     std::uint8_t responseStatus = static_cast<std::uint8_t>(m_ocaResponseStatusComboBox.getSelectedId() - 1);
@@ -548,8 +629,9 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
     NanoOcp1::Ocp1CommandDefinition commandDefinition;
     notificationString.clear();
 
-    auto& prop = propertyList.at(propIdx - 1);
-    if (prop.m_getMethodIdx == methodIdx)
+    // Depending on whether the Get, Set, or AddSubscription commands are selected,
+    // the commandDefinition will be defined differently.
+    if (getMethodSelected)
     {
         responseParamCount = 1;
         responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
@@ -557,18 +639,18 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
                                                             static_cast<std::uint16_t>(prop.m_type),
-                                                            static_cast<std::uint16_t>(prop.m_defLevel),
-                                                            static_cast<std::uint16_t>(prop.m_getMethodIdx));
+                                                            static_cast<std::uint16_t>(commandDefLevel),
+                                                            static_cast<std::uint16_t>(methodIdx));
     }
-    else if (prop.m_setMethodIdx == methodIdx)
+    else if (setMethodSelected)
     {
         auto commandParamData = m_ocaObject->CreateParamDataForComponent(m_ocaSetCommandValueComponent.get(), prop);
         jassert(commandParamData.size() > 0);
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
                                                             static_cast<std::uint16_t>(prop.m_type), 
-                                                            static_cast<std::uint16_t>(prop.m_defLevel), 
-                                                            static_cast<std::uint16_t>(prop.m_setMethodIdx), 
+                                                            static_cast<std::uint16_t>(commandDefLevel),
+                                                            static_cast<std::uint16_t>(methodIdx),
                                                             1, /* paramCount */ 
                                                             commandParamData);
     }
