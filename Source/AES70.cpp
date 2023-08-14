@@ -341,16 +341,16 @@ juce::Component* OcaGain::CreateComponentForProperty(const Property& prop, const
     if ((prop.m_defLevel == OcaGain::DefLevel()) &&
         (prop.m_index == 1))
     {
-        auto pTextEditor = new juce::TextEditor("OcaGain.Gain");
-        pTextEditor->setInputRestrictions(0, "0123456789.");
-        pTextEditor->setJustification(juce::Justification(juce::Justification::centredRight));
-        pTextEditor->setText("0.0");
-        pTextEditor->onTextChange = [=]()
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        pSlider->setRange(-120.0, 12.0, 0.01);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
         {
             onChangeFunction();
         };
 
-        return pTextEditor;
+        return pSlider;
     }
 
     return OcaActuator::CreateComponentForProperty(prop, onChangeFunction);
@@ -361,8 +361,8 @@ std::vector<std::uint8_t> OcaGain::CreateParamDataForComponent(const juce::Compo
     if ((prop.m_defLevel == OcaGain::DefLevel()) &&
         (prop.m_index == 1))
     {
-        auto pTextEditor = static_cast<const juce::TextEditor*>(component);
-        std::float_t newValue = pTextEditor->getText().getFloatValue();
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::float_t newValue = static_cast<std::float_t>(pSlider->getValue());
         return NanoOcp1::DataFromFloat(newValue);
     }
 
@@ -428,12 +428,14 @@ std::vector<std::uint8_t> OcaGain::CreateParamDataForComponent(const juce::Compo
 
 int OcaCustomClass::DefLevel() const
 {
-    return m_defLevel;
+    jassertfalse; // Not expecting this method to be called.
+    return 0;
 }
 
 std::vector<Property> OcaCustomClass::GetProperties() const
 {
-    return OcaRoot::GetProperties();
+    // Custom class contains only one property: the one defined by the user via the GUI.
+    return std::vector<Property>({ m_customProp });
 }
 
 juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
@@ -442,8 +444,98 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
 
     switch (prop.m_type)
     {
-    default:
-        break;
+        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
+            {
+                auto pComboBox = new juce::ComboBox("OcaCustomClass Control");
+                pComboBox->setHasFocusOutline(true);
+                pComboBox->addItem("1: True", 1);
+                pComboBox->addItem("0: False", 2);
+                pComboBox->setSelectedId(1, juce::dontSendNotification);
+                pComboBox->onChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pComboBox;
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT8:
+            {
+                auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+                pSlider->setHasFocusOutline(true);
+                pSlider->setRange(std::numeric_limits<std::uint8_t>::min(), std::numeric_limits<std::uint8_t>::max(), 1);
+                pSlider->setValue(std::numeric_limits<std::uint8_t>::min(), juce::dontSendNotification);
+                pSlider->onValueChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pSlider;
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT16:
+            {
+                auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+                pSlider->setHasFocusOutline(true);
+                pSlider->setRange(std::numeric_limits<std::uint16_t>::min(), std::numeric_limits<std::uint16_t>::max(), 1);
+                pSlider->setValue(std::numeric_limits<std::uint16_t>::min(), juce::dontSendNotification);
+                pSlider->onValueChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pSlider;
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT32:
+            {
+                juce::NormalisableRange<double> range(std::numeric_limits<std::uint32_t>::min(),
+                    std::numeric_limits<std::uint32_t>::max(),
+                    1);
+                auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+                pSlider->setHasFocusOutline(true);
+                pSlider->setNormalisableRange(range); // TODO: fix range display bug 
+                //pSlider->setRange(std::numeric_limits<std::uint32_t>::min(), std::numeric_limits<std::uint32_t>::max(), 1);
+                pSlider->setRange(0, 0x7fffffff, 1);
+                pSlider->setValue(std::numeric_limits<std::uint32_t>::min(), juce::dontSendNotification);
+                pSlider->onValueChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pSlider;
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_FLOAT32:
+            {
+                //juce::NormalisableRange<double> range(std::numeric_limits<std::uint32_t>::min(),
+                //    std::numeric_limits<std::uint32_t>::max(),
+                //    1);            
+                auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+                pSlider->setHasFocusOutline(true);
+                //pSlider->setNormalisableRange(range); // TODO: fix range display bug 
+                //pSlider->setRange(std::numeric_limits<std::float_t>::lowest(), std::numeric_limits<std::float_t>::max(), 1);
+                //pSlider->setValue(std::numeric_limits<std::float_t>::min(), juce::dontSendNotification);
+                pSlider->setRange(-255.0, 255.0, 0.01);
+                pSlider->setValue(0.0, juce::dontSendNotification);
+                pSlider->onValueChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pSlider;
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_STRING:
+            {
+                auto pTextEditor = new juce::TextEditor("OcaCustomClass Control");
+                pTextEditor->setHasFocusOutline(true);
+                pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
+                pTextEditor->setText("Some text");
+                pTextEditor->onTextChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pTextEditor;
+            }
+            break;
+        default:
+            break;
     }
 
     jassert(ret); // Missing implementation!
@@ -456,8 +548,49 @@ std::vector<std::uint8_t> OcaCustomClass::CreateParamDataForComponent(const juce
 
     switch (prop.m_type)
     {
-    default:
-        break;
+        case NanoOcp1::OCP1DATATYPE_BOOLEAN:
+            {
+                auto pComboBox = static_cast<const juce::ComboBox*>(component);
+                std::uint8_t newValue = (pComboBox->getSelectedId() == 1) ? 1 : 0;
+                ret = NanoOcp1::DataFromUint8(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT8:
+            {
+                auto pSlider = static_cast<const juce::Slider*>(component);
+                std::uint8_t newValue = static_cast<std::uint8_t>(pSlider->getValue());
+                ret = NanoOcp1::DataFromUint8(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT16:
+            {
+                auto pSlider = static_cast<const juce::Slider*>(component);
+                std::uint16_t newValue = static_cast<std::uint16_t>(pSlider->getValue());
+                ret = NanoOcp1::DataFromUint16(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_UINT32:
+            {
+                auto pSlider = static_cast<const juce::Slider*>(component);
+                std::uint32_t newValue = static_cast<std::uint32_t>(pSlider->getValue());
+                ret = NanoOcp1::DataFromUint32(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_FLOAT32:
+            {
+                auto pSlider = static_cast<const juce::Slider*>(component);
+                std::float_t newValue = static_cast<std::float_t>(pSlider->getValue());
+                ret = NanoOcp1::DataFromFloat(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_STRING:
+            {
+                const auto& pTextEditor = static_cast<const juce::TextEditor*>(component);
+                ret = NanoOcp1::DataFromString(pTextEditor->getText());
+            }
+            break;
+        default:
+            break;
     }
 
     jassert(ret.size() > 0); // Missing implementation!

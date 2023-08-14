@@ -483,7 +483,7 @@ struct OcaCustomClass : public OcaRoot
     juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
     std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 
-    int m_defLevel; // User-defined definition level
+    Property m_customProp; // User-defined property
 };
 
 }
