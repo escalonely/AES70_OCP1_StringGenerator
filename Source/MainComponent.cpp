@@ -158,16 +158,16 @@ MainComponent::MainComponent()
     m_ocaCommandTextEditor.setReadOnly(true);
     m_ocaCommandTextEditor.setCaretVisible(false);
     m_ocaCommandTextEditor.setMultiLine(true, true);
-    m_ocaCommandTextEditor.setTextToShowWhenEmpty("Transmit the binary string shown on this field \n"
-        "to execute the specified Command on an AES70-capable device.", 
+    m_ocaCommandTextEditor.setTextToShowWhenEmpty("This field will show the specified Command string "
+        "to be transmitted to an AES70-capable device.", 
         LabelEnabledTextColour);
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
     m_ocaResponseTextEditor.setReadOnly(true);
     m_ocaResponseTextEditor.setCaretVisible(false);
     m_ocaResponseTextEditor.setMultiLine(true, true);
-    m_ocaResponseTextEditor.setTextToShowWhenEmpty("The binary string shown on this field is "
-        "the Response which can be expected from the device as a result of the above Command.", 
+    m_ocaResponseTextEditor.setTextToShowWhenEmpty("This field will show the expected Response "
+        "from the device as a result of the above Command.", 
         LabelEnabledTextColour);
 
     m_ocaNotificationTextEditor.setHasFocusOutline(true);
