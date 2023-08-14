@@ -230,19 +230,10 @@ struct OcaGain : public OcaActuator
  */
 struct OcaDelay : public OcaActuator
 {
-    int DefLevel() const override
-    {
-        return OcaActuator::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaActuator::GetProperties();
-        ret.push_back({
-            OcaDelay::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "DelayTime", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -266,19 +257,10 @@ struct OcaBasicActuator : public OcaActuator
  */
 struct OcaStringActuator : public OcaBasicActuator
 {
-    int DefLevel() const override
-    {
-        return OcaBasicActuator::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaBasicActuator::GetProperties();
-        ret.push_back({
-            OcaStringActuator::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Setting", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**

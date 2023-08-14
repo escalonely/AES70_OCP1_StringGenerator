@@ -82,7 +82,6 @@ std::vector<std::uint8_t> OcaRoot::CreateParamDataForComponent(const juce::Compo
     return std::vector<std::uint8_t>();
 }
 
-
 OcaRoot* OcaRoot::Create(int classIdx)
 {
     OcaRoot* obj(nullptr);
@@ -239,7 +238,7 @@ juce::Component* OcaSwitch::CreateComponentForProperty(const Property& prop, con
         (prop.m_index == 1))
     {
         auto pComboBox = new juce::ComboBox("OcaSwitch.Position");
-        for (int posIdx = 0; posIdx < 100; posIdx++)
+        for (int posIdx = 0; posIdx < 127; posIdx++)
             pComboBox->addItem(juce::String(posIdx), posIdx + 1);
         pComboBox->setSelectedId(1, juce::sendNotification);
         pComboBox->onChange = [=]()
@@ -375,6 +374,55 @@ std::vector<std::uint8_t> OcaGain::CreateParamDataForComponent(const juce::Compo
 // Class OcaDelay
 //==============================================================================
 
+int OcaDelay::DefLevel() const
+{
+    return OcaActuator::DefLevel() + 1;
+}
+
+std::vector<Property> OcaDelay::GetProperties() const
+{
+    std::vector<Property> ret = OcaActuator::GetProperties();
+    ret.push_back({
+        OcaDelay::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "DelayTime", 1 /* get */, 2 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaDelay::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaDelay::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        //pSlider->setRange(0.0, std::numeric_limits<std::float_t>::max(), 0.001); // TODO: set useful max limit
+        pSlider->setRange(0.0, 65535.0, 0.001);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pSlider;
+    }
+
+    return OcaActuator::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaDelay::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaDelay::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::float_t newValue = static_cast<std::float_t>(pSlider->getValue());
+        return NanoOcp1::DataFromFloat(newValue);
+    }
+
+    return OcaActuator::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaBasicActuator
 //==============================================================================
@@ -382,6 +430,79 @@ std::vector<std::uint8_t> OcaGain::CreateParamDataForComponent(const juce::Compo
 //==============================================================================
 // Class OcaStringActuator
 //==============================================================================
+
+int OcaStringActuator::DefLevel() const
+{
+    return OcaBasicActuator::DefLevel() + 1;
+}
+
+std::vector<Property> OcaStringActuator::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicActuator::GetProperties();
+    ret.push_back({
+        OcaStringActuator::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Setting", 1 /* get */, 2 /* set */
+        });
+    ret.push_back({
+        OcaStringActuator::DefLevel(), 2 /* idx */, NanoOcp1::OCP1DATATYPE_UINT16, "MaxLen", 3 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaStringActuator::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if (prop.m_defLevel == OcaStringActuator::DefLevel())
+    {
+        if (prop.m_index == 1) // SETTING
+        {
+            auto pTextEditor = new juce::TextEditor("OcaStringActuator.Setting");
+            pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
+            pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
+            pTextEditor->setText("Some text");
+            pTextEditor->onTextChange = [=]()
+            {
+                onChangeFunction();
+            };
+
+            return pTextEditor;
+        }
+        else if (prop.m_index == 2) // MAX_LEN 
+        {
+            auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+            pSlider->setHasFocusOutline(true);
+            pSlider->setRange(0.0, 1024.0, 1.0);
+            pSlider->setValue(0.0, juce::dontSendNotification);
+            pSlider->onValueChange = [=]()
+            {
+                onChangeFunction();
+            };
+
+            return pSlider;
+        }
+    }
+
+    return OcaBasicActuator::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaStringActuator::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if (prop.m_defLevel == OcaStringActuator::DefLevel())
+    {
+        if (prop.m_index == 1) // SETTING
+        {
+            const juce::TextEditor* pTextEditor = static_cast<const juce::TextEditor*>(component);
+            return NanoOcp1::DataFromString(pTextEditor->getText());
+        }
+        else if (prop.m_index == 2) // MAX_LEN
+        {
+            auto pSlider = static_cast<const juce::Slider*>(component);
+            std::uint16_t newValue = static_cast<std::uint16_t>(pSlider->getValue());
+            return NanoOcp1::DataFromUint16(newValue);
+        }
+    }
+
+    return OcaBasicActuator::CreateParamDataForComponent(component, prop);
+}
+
 
 //==============================================================================
 // Class OcaInt32Actuator
