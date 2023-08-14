@@ -269,19 +269,10 @@ struct OcaInt32Actuator : public OcaBasicActuator
  */
 struct OcaSensor : public OcaWorker
 {
-    int DefLevel() const override
-    {
-        return OcaWorker::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaWorker::GetProperties();
-        ret.push_back({
-            OcaSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_UINT8, "ReadingState", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -300,19 +291,10 @@ struct OcaBasicSensor : public OcaSensor
  */
 struct OcaBooleanSensor : public OcaBasicSensor
 {
-    int DefLevel() const override
-    {
-        return OcaBasicSensor::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaBasicSensor::GetProperties();
-        ret.push_back({
-            OcaBooleanSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_BOOLEAN, "Reading", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -320,19 +302,10 @@ struct OcaBooleanSensor : public OcaBasicSensor
  */
 struct OcaInt32Sensor : public OcaBasicSensor
 {
-    int DefLevel() const override
-    {
-        return OcaBasicSensor::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaBasicSensor::GetProperties();
-        ret.push_back({
-            OcaInt32Sensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_INT32, "Reading", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**

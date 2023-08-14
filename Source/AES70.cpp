@@ -561,6 +561,57 @@ std::vector<std::uint8_t> OcaInt32Actuator::CreateParamDataForComponent(const ju
 // Class OcaSensor
 //==============================================================================
 
+int OcaSensor::DefLevel() const
+{
+    return OcaWorker::DefLevel() + 1;
+}
+
+std::vector<Property> OcaSensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaWorker::GetProperties();
+    ret.push_back({
+        OcaSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_UINT8, "ReadingState", 1 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaSensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = new juce::ComboBox("OcaSensor.ReadingState");
+        pComboBox->addItem("0: Unknown", 1);
+        pComboBox->addItem("1: Valid", 2);
+        pComboBox->addItem("2: UnderRange", 3);
+        pComboBox->addItem("3: OverRange", 4);
+        pComboBox->addItem("4: Error", 5);
+        pComboBox->setSelectedId(2, juce::sendNotification);
+        pComboBox->onChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pComboBox;
+    }
+
+    return OcaWorker::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaSensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = static_cast<const juce::ComboBox*>(component);
+        auto newValue = static_cast<std::uint8_t>(pComboBox->getSelectedId() - 1);
+        return NanoOcp1::DataFromUint8(newValue);
+    }
+
+    return OcaWorker::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaBasicSensor
 //==============================================================================
@@ -569,9 +620,106 @@ std::vector<std::uint8_t> OcaInt32Actuator::CreateParamDataForComponent(const ju
 // Class OcaBooleanSensor
 //==============================================================================
 
+int OcaBooleanSensor::DefLevel() const
+{
+    return OcaBasicSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaBooleanSensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicSensor::GetProperties();
+    ret.push_back({
+        OcaBooleanSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_BOOLEAN, "Reading", 1 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaBooleanSensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaBooleanSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = new juce::ComboBox("OcaBooleanSensor.Enabled");
+        pComboBox->addItem("1: True", 1);
+        pComboBox->addItem("0: False", 2);
+        pComboBox->setSelectedId(1, juce::sendNotification);
+        pComboBox->onChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pComboBox;
+    }
+
+    return OcaBasicSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaBooleanSensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaBooleanSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = static_cast<const juce::ComboBox*>(component);
+        std::uint8_t newValue = (pComboBox->getSelectedId() == 1) ? 1 : 0;
+        return NanoOcp1::DataFromUint8(newValue);
+    }
+
+    return OcaBasicSensor::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaInt32Sensor
 //==============================================================================
+
+int OcaInt32Sensor::DefLevel() const
+{
+    return OcaBasicSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaInt32Sensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicSensor::GetProperties();
+    ret.push_back({
+        OcaInt32Sensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_INT32, "Reading", 1 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaInt32Sensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaInt32Sensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        //pSlider->setRange(0.0, std::numeric_limits<std::int32_t>::max(), 1); // TODO: set true limits
+        pSlider->setRange(-65535.0, 65535.0, 1);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pSlider;
+    }
+
+    return OcaBasicSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaInt32Sensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaInt32Sensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::int32_t newValue = static_cast<std::int32_t>(pSlider->getValue());
+        return NanoOcp1::DataFromInt32(newValue);
+    }
+
+    return OcaBasicSensor::CreateParamDataForComponent(component, prop);
+}
+
 
 //==============================================================================
 // Class OcaFloat32Sensor
