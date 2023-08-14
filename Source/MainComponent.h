@@ -94,6 +94,9 @@ private:
     // Component inside the main juce::Viewport, set with setViewedComponent.
     juce::Component m_container;
 
+    // Hyperlink to the project webpage.
+    juce::HyperlinkButton m_hyperlink;
+
     // TextEditor to enter the AES70/OCA object number
     juce::TextEditor m_ocaONoTextEditor;
 

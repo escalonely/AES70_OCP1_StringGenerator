@@ -40,14 +40,15 @@ static constexpr int MethodIndexForAddSubscription = 256;
  */
 static constexpr int ClassIndexForCustomClass = 256;
 
-/**
- * Default height (in pixels) of m_container, the container component within the juce::Viewport.
- */
-static constexpr int ContainerComponentDefaultHeight = 480;
+static constexpr int AppWindowDefaultWidth = 640; // Default App window width.
+static constexpr int AppWindowDefaultHeight = 480; // Default App window height, also used for m_container within the juce::Viewport.
 
 static const juce::Colour AppBackgroundColour(43, 65, 77);          // App window background color
 static const juce::Colour LabelEnabledTextColour(125, 182, 212);    // Color for labels of relevant controls
 static const juce::Colour LabelDisabledTextColour(12, 12, 12);      // Color for labels of non-relevant controls
+
+static const juce::String ProjectHostShortURL("https://github.com/escalonely"); // Web address of this project's host.
+static const juce::String ProjectHostLongURL("https://github.com/escalonely/AES70_OCP1_StringGenerator"); // Complete web address of this project's host.
 
 /**
  * Expected user workflow, separated in discrete steps.
@@ -88,7 +89,7 @@ enum GuiLabels
  * Text content for all juce::Label components used on the GUI.
  */
 static const std::vector<juce::String> GuiLabelsText = {
-    /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator",
+    /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
     /* LABELIDX_CLASS,             */ "Class:",
     /* LABELIDX_ONO,               */ "ONo:",
     /* LABELIDX_PROP,              */ "Property:",
@@ -116,8 +117,10 @@ MainComponent::MainComponent()
         m_ocaCommandTextEditor(juce::TextEditor("OCA Command String")),
         m_ocaResponseStatusComboBox(juce::ComboBox("OCA Response Status")),
         m_ocaResponseTextEditor(juce::TextEditor("OCA Response String")),
-        m_ocaNotificationTextEditor(juce::TextEditor("OCA Notification String"))
+        m_ocaNotificationTextEditor(juce::TextEditor("OCA Notification String")),
+        m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
 {
+    m_container.addAndMakeVisible(&m_hyperlink);
     m_container.addAndMakeVisible(&m_ocaONoTextEditor);
     m_container.addAndMakeVisible(&m_ocaClassComboBox);
     m_container.addAndMakeVisible(&m_ocaPropertyComboBox);
@@ -133,6 +136,7 @@ MainComponent::MainComponent()
 
     m_ocaONoTextEditor.setHasFocusOutline(true);
     m_ocaONoTextEditor.setInputRestrictions(0, "0123456789");
+    m_ocaONoTextEditor.setIndents(m_ocaONoTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaONoTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
     m_ocaONoTextEditor.setText("10000", juce::dontSendNotification);
 
@@ -146,6 +150,7 @@ MainComponent::MainComponent()
 
     m_ocaCommandHandleTextEditor.setHasFocusOutline(true);
     m_ocaCommandHandleTextEditor.setInputRestrictions(0, "0123456789");
+    m_ocaCommandHandleTextEditor.setIndents(m_ocaCommandHandleTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaCommandHandleTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
     m_ocaCommandHandleTextEditor.setText("1", juce::dontSendNotification);
     
@@ -153,13 +158,17 @@ MainComponent::MainComponent()
     m_ocaCommandTextEditor.setReadOnly(true);
     m_ocaCommandTextEditor.setCaretVisible(false);
     m_ocaCommandTextEditor.setMultiLine(true, true);
-    m_ocaCommandTextEditor.setTextToShowWhenEmpty("Use the following binary string to execute the selected Command.", LabelEnabledTextColour);
+    m_ocaCommandTextEditor.setTextToShowWhenEmpty("Transmit the binary string shown on this field \n"
+        "to execute the specified Command on an AES70-capable device.", 
+        LabelEnabledTextColour);
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
     m_ocaResponseTextEditor.setReadOnly(true);
     m_ocaResponseTextEditor.setCaretVisible(false);
     m_ocaResponseTextEditor.setMultiLine(true, true);
-    m_ocaResponseTextEditor.setTextToShowWhenEmpty("The following Response can be expected.", LabelEnabledTextColour);
+    m_ocaResponseTextEditor.setTextToShowWhenEmpty("The binary string shown on this field is "
+        "the Response which can be expected from the device as a result of the above Command.", 
+        LabelEnabledTextColour);
 
     m_ocaNotificationTextEditor.setHasFocusOutline(true);
     m_ocaNotificationTextEditor.setReadOnly(true);
@@ -180,7 +189,7 @@ MainComponent::MainComponent()
     {
         m_ocaLabels.emplace_back(std::make_unique<juce::Label>("OCA Label " + juce::String(labelIdx)));
         if (labelIdx == LABELIDX_TITLE)
-            m_ocaLabels.back()->setJustificationType(juce::Justification::centredLeft);
+            m_ocaLabels.back()->setJustificationType(juce::Justification::bottomRight);
         else
             m_ocaLabels.back()->setJustificationType(juce::Justification::centredRight);
 
@@ -190,6 +199,11 @@ MainComponent::MainComponent()
         m_ocaLabels.at(labelIdx)->setText(GuiLabelsText.at(labelIdx), juce::dontSendNotification);
         m_container.addAndMakeVisible(m_ocaLabels.back().get());
     }
+
+    // Set same font as the labels.
+    m_hyperlink.setFont(m_ocaLabels.at(LABELIDX_TITLE)->getFont(), false /* do not resize */);
+    m_hyperlink.setJustificationType(juce::Justification::topRight);
+    m_hyperlink.setTooltip(ProjectHostLongURL); // TODO: get tooltip to work
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
@@ -417,7 +431,7 @@ MainComponent::MainComponent()
         UpdateBinaryStrings();
     };
 
-    setSize(640, 480);
+    setSize(AppWindowDefaultWidth, AppWindowDefaultHeight);
     setViewedComponent(&m_container, false);
 
     ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
@@ -689,21 +703,28 @@ void MainComponent::resized()
 {
     // The height of the container component within the Viewport depends on how much 
     // content needs to be displayed. So m_container grows as more components are required. 
-    int containerHeight = ContainerComponentDefaultHeight;
+    int containerHeight = AppWindowDefaultHeight;
     if (m_ocaCommandComboBox.getSelectedId() == MethodIndexForAddSubscription)
         containerHeight += 140;
 
     // Remove a margin to account for the vertical scrollbar.
     m_container.setBounds(0, 0, getLocalBounds().getWidth() - 8, containerHeight);
     auto bounds = m_container.getLocalBounds();
+    bounds.removeFromLeft(4); // Left margin
 
     int margin = 2;
     int controlHeight = 40;
     int comboBoxWidth = bounds.getWidth() / 5; // 5 columns. 
 
     // Row 1
-    auto rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f));
+    auto rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 0.75));
+    rowBounds.removeFromLeft(comboBoxWidth); // Horizontal spacer
     m_ocaLabels.at(LABELIDX_TITLE)->setBounds(rowBounds.reduced(margin));
+    rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 0.5));
+    m_hyperlink.setBounds(rowBounds.reduced(margin));
+
+    // Vertical spacer
+    bounds.removeFromTop(controlHeight / 2);
 
     // Row 2
     rowBounds = bounds.removeFromTop(controlHeight);
