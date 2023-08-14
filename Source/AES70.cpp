@@ -56,6 +56,7 @@ juce::Component* OcaRoot::CreateComponentForProperty(const Property& prop, const
         (prop.m_index == 5))
     {
         auto pTextEditor = new juce::TextEditor("OcaRoot.Role");
+        pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
         pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
         pTextEditor->setText("Some text");
         pTextEditor->onTextChange = [=]()
@@ -525,6 +526,7 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
             {
                 auto pTextEditor = new juce::TextEditor("OcaCustomClass Control");
                 pTextEditor->setHasFocusOutline(true);
+                pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
                 pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
                 pTextEditor->setText("Some text");
                 pTextEditor->onTextChange = [=]()
