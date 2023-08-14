@@ -508,6 +508,55 @@ std::vector<std::uint8_t> OcaStringActuator::CreateParamDataForComponent(const j
 // Class OcaInt32Actuator
 //==============================================================================
 
+int OcaInt32Actuator::DefLevel() const
+{
+    return OcaBasicActuator::DefLevel() + 1;
+}
+
+std::vector<Property> OcaInt32Actuator::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicActuator::GetProperties();
+    ret.push_back({
+        OcaInt32Actuator::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_INT32, "Setting", 1 /* get */, 2 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaInt32Actuator::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaInt32Actuator::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        //pSlider->setRange(0.0, std::numeric_limits<std::int32_t>::max(), 1); // TODO: set true limits
+        pSlider->setRange(-65535.0, 65535.0, 1);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pSlider;
+    }
+
+    return OcaBasicActuator::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaInt32Actuator::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaInt32Actuator::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::int32_t newValue = static_cast<std::int32_t>(pSlider->getValue());
+        return NanoOcp1::DataFromInt32(newValue);
+    }
+
+    return OcaBasicActuator::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaSensor
 //==============================================================================
