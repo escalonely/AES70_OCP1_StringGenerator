@@ -13,6 +13,11 @@
         </GROUP>
       </GROUP>
     </GROUP>
+    <GROUP id="{6B66A945-B301-BCC2-57E8-3798FC5D9015}" name="Resources">
+      <GROUP id="{36E37E30-6603-6B38-52E2-B72A2A0A1B80}" name="Images">
+        <FILE id="X5RdkA" name="StartHere.png" compile="0" resource="1" file="Resources/Images/StartHere.png"/>
+      </GROUP>
+    </GROUP>
     <GROUP id="{2156CA2B-72B1-D5CD-005E-9718D619F5B0}" name="Source">
       <FILE id="UQu58X" name="AES70.cpp" compile="1" resource="0" file="Source/AES70.cpp"/>
       <FILE id="BFeQKw" name="AES70.h" compile="0" resource="0" file="Source/AES70.h"/>

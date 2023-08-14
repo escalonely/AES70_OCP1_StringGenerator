@@ -252,6 +252,9 @@ MainComponent::MainComponent()
         // Enable labels
         m_ocaLabels.at(LABELIDX_ONO)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
         m_ocaLabels.at(LABELIDX_PROP)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
+
+        // Remove StartHere icon
+        repaint();
     };
 
     m_ocaPropertyComboBox.onChange = [=]()
@@ -708,6 +711,14 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
 void MainComponent::paint(juce::Graphics& g)
 {
     g.fillAll(AppBackgroundColour);
+
+    if (m_ocaClassComboBox.getSelectedId() == 0)
+    {
+        std::unique_ptr<Drawable> startHereIcon = Drawable::createFromImageData(BinaryData::StartHere_png, BinaryData::StartHere_pngSize);
+        float startHereIconXPos = (float)(m_ocaPropertyComboBox.getBounds().getCentreX() - 50);
+        startHereIcon->drawWithin(g, Rectangle<float>(startHereIconXPos, 15.0f, 90.0f, 45.0f), 
+            RectanglePlacement::stretchToFit, 0.75f);
+    }
 }
 
 void MainComponent::resized()
@@ -732,7 +743,8 @@ void MainComponent::resized()
     rowBounds.removeFromLeft(comboBoxWidth); // Horizontal spacer
     m_ocaLabels.at(LABELIDX_TITLE)->setBounds(rowBounds.reduced(margin));
     rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 0.5));
-    m_hyperlink.setBounds(rowBounds.reduced(margin));
+    m_hyperlink.changeWidthToFitText();
+    m_hyperlink.setBounds(rowBounds.removeFromRight(m_hyperlink.getWidth()).reduced(margin));
 
     // Vertical spacer
     bounds.removeFromTop(controlHeight / 2);
