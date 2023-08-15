@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="bMvzN6" name="AES70_OCP1_StringGenerator" projectType="guiapp"
+              jucerFormatVersion="1" version="0.0.1" companyName="escalonely"
+              companyCopyright="Copyright (C) 2023 Bernardo Escalona" companyWebsite="https://github.com/escalonely"
+              headerPath="../../submodules/NanoOcp/Source/&#10;">
+  <MAINGROUP id="rBvj44" name="AES70_OCP1_StringGenerator">
+    <GROUP id="{4187CFA9-5D91-7F98-1636-F2209B89AF25}" name="submodules">
+      <GROUP id="{97D5A005-6FA8-BCBE-409C-259301295DC6}" name="NanoOcp">
+        <GROUP id="{25B83AC1-8C06-2583-E248-C22542F76780}" name="Source">
+          <FILE id="rvWjXy" name="Ocp1Message.cpp" compile="1" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.cpp"/>
+          <FILE id="YOVqxa" name="Ocp1Message.h" compile="0" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.h"/>
+        </GROUP>
+      </GROUP>
+    </GROUP>
+    <GROUP id="{6B66A945-B301-BCC2-57E8-3798FC5D9015}" name="Resources">
+      <GROUP id="{36E37E30-6603-6B38-52E2-B72A2A0A1B80}" name="Images">
+        <FILE id="X5RdkA" name="StartHere.png" compile="0" resource="1" file="Resources/Images/StartHere.png"/>
+      </GROUP>
+    </GROUP>
+    <GROUP id="{2156CA2B-72B1-D5CD-005E-9718D619F5B0}" name="Source">
+      <FILE id="UQu58X" name="AES70.cpp" compile="1" resource="0" file="Source/AES70.cpp"/>
+      <FILE id="BFeQKw" name="AES70.h" compile="0" resource="0" file="Source/AES70.h"/>
+      <FILE id="ubHQdS" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="HWPVHX" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="u8yfWC" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <VS2019 targetFolder="Builds/VisualStudio2019">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="AES70_OCP1_StringGenerator"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="AES70_OCP1_StringGenerator"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_data_structures" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_events" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_graphics" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_basics" path="submodules\JUCE\modules"/>
+      </MODULEPATHS>
+    </VS2019>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+</JUCERPROJECT>
