@@ -120,7 +120,6 @@ struct OcaRoot
     /**
      * Factory method to create a custom / proprietary / non-standard AES70 object.
      *
-     * @param[in] TODO
      * @return  A pointer to an OcaRoot-related object. NOTE: Ownership of the object
      *          is responsibility of the caller of the method.
      */
@@ -313,19 +312,10 @@ struct OcaInt32Sensor : public OcaBasicSensor
  */
 struct OcaFloat32Sensor : public OcaBasicSensor
 {
-    int DefLevel() const override
-    {
-        return OcaBasicSensor::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaBasicSensor::GetProperties();
-        ret.push_back({
-            OcaFloat32Sensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "Reading", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -333,19 +323,10 @@ struct OcaFloat32Sensor : public OcaBasicSensor
  */
 struct OcaStringSensor : public OcaBasicSensor
 {
-    int DefLevel() const override
-    {
-        return OcaBasicSensor::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaBasicSensor::GetProperties();
-        ret.push_back({
-            OcaStringSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Reading", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -353,19 +334,10 @@ struct OcaStringSensor : public OcaBasicSensor
  */
 struct OcaLevelSensor : public OcaSensor
 {
-    int DefLevel() const override
-    {
-        return OcaSensor::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaSensor::GetProperties();
-        ret.push_back({
-            OcaLevelSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "Reading", 1 /* get */, 0 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -373,10 +345,10 @@ struct OcaLevelSensor : public OcaSensor
  */
 struct OcaAudioLevelSensor : public OcaLevelSensor
 {
-    int DefLevel() const override
-    {
-        return OcaLevelSensor::DefLevel() + 1;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**
@@ -384,19 +356,10 @@ struct OcaAudioLevelSensor : public OcaLevelSensor
  */
 struct OcaAgent : public OcaRoot
 {
-    int DefLevel() const override
-    {
-        return OcaRoot::DefLevel() + 1;
-    }
-
-    std::vector<Property> GetProperties() const override
-    {
-        std::vector<Property> ret = OcaRoot::GetProperties();
-        ret.push_back({
-            OcaAgent::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Label", 1 /* get */, 2 /* set */
-            });
-        return ret;
-    }
+    int DefLevel() const override;
+    std::vector<Property> GetProperties() const override;
+    juce::Component* CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction) override;
+    std::vector<std::uint8_t> CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop) override;
 };
 
 /**

@@ -56,7 +56,7 @@ juce::Component* OcaRoot::CreateComponentForProperty(const Property& prop, const
         (prop.m_index == 5))
     {
         auto pTextEditor = new juce::TextEditor("OcaRoot.Role");
-        pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
+        pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
         pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
         pTextEditor->setText("Some text");
         pTextEditor->onTextChange = [=]()
@@ -455,7 +455,7 @@ juce::Component* OcaStringActuator::CreateComponentForProperty(const Property& p
         if (prop.m_index == 1) // SETTING
         {
             auto pTextEditor = new juce::TextEditor("OcaStringActuator.Setting");
-            pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
+            pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
             pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
             pTextEditor->setText("Some text");
             pTextEditor->onTextChange = [=]()
@@ -725,21 +725,292 @@ std::vector<std::uint8_t> OcaInt32Sensor::CreateParamDataForComponent(const juce
 // Class OcaFloat32Sensor
 //==============================================================================
 
+int OcaFloat32Sensor::DefLevel() const
+{
+    return OcaBasicSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaFloat32Sensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicSensor::GetProperties();
+    ret.push_back({
+        OcaFloat32Sensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "Reading", 1 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaFloat32Sensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaFloat32Sensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        //pSlider->setRange(0.0, std::numeric_limits<std::float_t>::max(), 0.001); // TODO: set useful limits
+        pSlider->setRange(-65535.0, 65535.0, 0.001);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pSlider;
+    }
+
+    return OcaBasicSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaFloat32Sensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaFloat32Sensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::float_t newValue = static_cast<std::float_t>(pSlider->getValue());
+        return NanoOcp1::DataFromFloat(newValue);
+    }
+
+    return OcaBasicSensor::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaStringSensor
 //==============================================================================
+
+int OcaStringSensor::DefLevel() const
+{
+    return OcaBasicSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaStringSensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaBasicSensor::GetProperties();
+    ret.push_back({
+        OcaStringSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Reading", 1 /* get */, 0 /* set */
+        });
+    ret.push_back({
+        OcaStringSensor::DefLevel(), 2 /* idx */, NanoOcp1::OCP1DATATYPE_UINT16, "MaxLen", 2 /* get */, 3 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaStringSensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if (prop.m_defLevel == OcaStringSensor::DefLevel())
+    {
+        if (prop.m_index == 1) // READING
+        {
+            auto pTextEditor = new juce::TextEditor("OcaStringSensor.Reading");
+            pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
+            pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
+            pTextEditor->setText("Some text");
+            pTextEditor->onTextChange = [=]()
+            {
+                onChangeFunction();
+            };
+
+            return pTextEditor;
+        }
+        else if (prop.m_index == 2) // MAX_LEN 
+        {
+            auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+            pSlider->setHasFocusOutline(true);
+            pSlider->setRange(0.0, 1024.0, 1.0);
+            pSlider->setValue(0.0, juce::dontSendNotification);
+            pSlider->onValueChange = [=]()
+            {
+                onChangeFunction();
+            };
+
+            return pSlider;
+        }
+    }
+
+    return OcaBasicSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaStringSensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if (prop.m_defLevel == OcaStringSensor::DefLevel())
+    {
+        if (prop.m_index == 1) // READING
+        {
+            const juce::TextEditor* pTextEditor = static_cast<const juce::TextEditor*>(component);
+            return NanoOcp1::DataFromString(pTextEditor->getText());
+        }
+        else if (prop.m_index == 2) // MAX_LEN
+        {
+            auto pSlider = static_cast<const juce::Slider*>(component);
+            std::uint16_t newValue = static_cast<std::uint16_t>(pSlider->getValue());
+            return NanoOcp1::DataFromUint16(newValue);
+        }
+    }
+
+    return OcaBasicSensor::CreateParamDataForComponent(component, prop);
+}
+
 
 //==============================================================================
 // Class OcaLevelSensor
 //==============================================================================
 
+int OcaLevelSensor::DefLevel() const
+{
+    return OcaSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaLevelSensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaSensor::GetProperties();
+    ret.push_back({
+        OcaLevelSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_FLOAT32, "Reading", 1 /* get */, 0 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaLevelSensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaLevelSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+        pSlider->setHasFocusOutline(true);
+        //pSlider->setRange(0.0, std::numeric_limits<std::float_t>::max(), 0.001); // TODO: set useful limits
+        pSlider->setRange(-120.0, 12.0, 0.001);
+        pSlider->setValue(0.0, juce::dontSendNotification);
+        pSlider->onValueChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pSlider;
+    }
+
+    return OcaSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaLevelSensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaLevelSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pSlider = static_cast<const juce::Slider*>(component);
+        std::float_t newValue = static_cast<std::float_t>(pSlider->getValue());
+        return NanoOcp1::DataFromFloat(newValue);
+    }
+
+    return OcaSensor::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaAudioLevelSensor
 //==============================================================================
 
+int OcaAudioLevelSensor::DefLevel() const
+{
+    return OcaLevelSensor::DefLevel() + 1;
+}
+
+std::vector<Property> OcaAudioLevelSensor::GetProperties() const
+{
+    std::vector<Property> ret = OcaLevelSensor::GetProperties();
+    ret.push_back({
+        OcaAudioLevelSensor::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_UINT8, "Law", 1 /* get */, 2 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaAudioLevelSensor::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaAudioLevelSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = new juce::ComboBox("OcaAudioLevelSensor.Law");
+        pComboBox->addItem("1: VU", 1);
+        pComboBox->addItem("2: Standard VU", 2);
+        pComboBox->addItem("3: PPM1", 3);
+        pComboBox->addItem("4: PPM2", 4);
+        pComboBox->addItem("5: LKFS", 5);
+        pComboBox->addItem("6: RMS", 6);
+        pComboBox->addItem("7: PEAK", 7);
+        pComboBox->setSelectedId(1, juce::sendNotification);
+        pComboBox->onChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pComboBox;
+    }
+
+    return OcaLevelSensor::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaAudioLevelSensor::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaAudioLevelSensor::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pComboBox = static_cast<const juce::ComboBox*>(component);
+        auto newValue = static_cast<std::uint8_t>(pComboBox->getSelectedId());
+        return NanoOcp1::DataFromUint8(newValue);
+    }
+
+    return OcaLevelSensor::CreateParamDataForComponent(component, prop);
+}
+
+
 //==============================================================================
 // Class OcaAgent
 //==============================================================================
+
+int OcaAgent::DefLevel() const
+{
+    return OcaRoot::DefLevel() + 1;
+}
+
+std::vector<Property> OcaAgent::GetProperties() const
+{
+    std::vector<Property> ret = OcaRoot::GetProperties();
+    ret.push_back({
+        OcaAgent::DefLevel(), 1 /* idx */, NanoOcp1::OCP1DATATYPE_STRING, "Label", 1 /* get */, 2 /* set */
+        });
+    return ret;
+}
+
+juce::Component* OcaAgent::CreateComponentForProperty(const Property& prop, const std::function<void()>& onChangeFunction)
+{
+    if ((prop.m_defLevel == OcaAgent::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        auto pTextEditor = new juce::TextEditor("OcaAgent.Role");
+        pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
+        pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
+        pTextEditor->setText("Some text");
+        pTextEditor->onTextChange = [=]()
+        {
+            onChangeFunction();
+        };
+
+        return pTextEditor;
+    }
+
+    return OcaRoot::CreateComponentForProperty(prop, onChangeFunction);
+}
+
+std::vector<std::uint8_t> OcaAgent::CreateParamDataForComponent(const juce::Component* component, const AES70::Property& prop)
+{
+    if ((prop.m_defLevel == OcaAgent::DefLevel()) &&
+        (prop.m_index == 1))
+    {
+        const juce::TextEditor* pTextEditor = static_cast<const juce::TextEditor*>(component);
+        return NanoOcp1::DataFromString(pTextEditor->getText());
+    }
+
+    return OcaRoot::CreateParamDataForComponent(component, prop);
+}
+
 
 //==============================================================================
 // Class OcaCustomClass
@@ -805,12 +1076,12 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
             break;
         case NanoOcp1::OCP1DATATYPE_UINT32:
             {
-                juce::NormalisableRange<double> range(std::numeric_limits<std::uint32_t>::min(),
-                    std::numeric_limits<std::uint32_t>::max(),
-                    1);
+                //juce::NormalisableRange<double> range(std::numeric_limits<std::uint32_t>::min(),
+                //    std::numeric_limits<std::uint32_t>::max(),
+                //    1);
                 auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
                 pSlider->setHasFocusOutline(true);
-                pSlider->setNormalisableRange(range); // TODO: fix range display bug 
+                //pSlider->setNormalisableRange(range); // TODO: fix range display bug 
                 //pSlider->setRange(std::numeric_limits<std::uint32_t>::min(), std::numeric_limits<std::uint32_t>::max(), 1);
                 pSlider->setRange(0, 0x7fffffff, 1);
                 pSlider->setValue(std::numeric_limits<std::uint32_t>::min(), juce::dontSendNotification);
@@ -844,7 +1115,7 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
             {
                 auto pTextEditor = new juce::TextEditor("OcaCustomClass Control");
                 pTextEditor->setHasFocusOutline(true);
-                pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Hack for JUCE justification bug
+                pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
                 pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
                 pTextEditor->setText("Some text");
                 pTextEditor->onTextChange = [=]()
