@@ -321,6 +321,7 @@ MainComponent::MainComponent()
 
                 // Add supported data types defined in NanoOcp1 to m_ocaPropertyParamTypeComboBox and allow user changes.
                 m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_BOOLEAN), NanoOcp1::OCP1DATATYPE_BOOLEAN);
+                m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_INT32), NanoOcp1::OCP1DATATYPE_INT32);
                 m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT8), NanoOcp1::OCP1DATATYPE_UINT8);
                 m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT16), NanoOcp1::OCP1DATATYPE_UINT16);
                 m_ocaPropertyParamTypeComboBox.addItem(NanoOcp1::DataTypeToString(NanoOcp1::OCP1DATATYPE_UINT32), NanoOcp1::OCP1DATATYPE_UINT32);

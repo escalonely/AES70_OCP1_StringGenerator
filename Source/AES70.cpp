@@ -984,7 +984,7 @@ juce::Component* OcaAgent::CreateComponentForProperty(const Property& prop, cons
     if ((prop.m_defLevel == OcaAgent::DefLevel()) &&
         (prop.m_index == 1))
     {
-        auto pTextEditor = new juce::TextEditor("OcaAgent.Role");
+        auto pTextEditor = new juce::TextEditor("OcaAgent.Label");
         pTextEditor->setIndents(pTextEditor->getLeftIndent(), 0); // Fix for JUCE justification bug
         pTextEditor->setJustification(juce::Justification(juce::Justification::centredLeft));
         pTextEditor->setText("Some text");
@@ -1048,6 +1048,19 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
                 ret = pComboBox;
             }
             break;
+        case NanoOcp1::OCP1DATATYPE_INT32:
+            {
+                auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
+                pSlider->setHasFocusOutline(true);
+                pSlider->setRange(-65535, 65535, 1);
+                pSlider->setValue(0, juce::dontSendNotification);
+                pSlider->onValueChange = [=]()
+                {
+                    onChangeFunction();
+                };
+                ret = pSlider;
+            }
+            break;
         case NanoOcp1::OCP1DATATYPE_UINT8:
             {
                 auto pSlider = new juce::Slider(juce::Slider::LinearBar, juce::Slider::TextBoxBelow);
@@ -1102,7 +1115,7 @@ juce::Component* OcaCustomClass::CreateComponentForProperty(const Property& prop
                 //pSlider->setNormalisableRange(range); // TODO: fix range display bug 
                 //pSlider->setRange(std::numeric_limits<std::float_t>::lowest(), std::numeric_limits<std::float_t>::max(), 1);
                 //pSlider->setValue(std::numeric_limits<std::float_t>::min(), juce::dontSendNotification);
-                pSlider->setRange(-255.0, 255.0, 0.01);
+                pSlider->setRange(-65535.0, 65535.0, 0.01);
                 pSlider->setValue(0.0, juce::dontSendNotification);
                 pSlider->onValueChange = [=]()
                 {
@@ -1144,6 +1157,13 @@ std::vector<std::uint8_t> OcaCustomClass::CreateParamDataForComponent(const juce
                 auto pComboBox = static_cast<const juce::ComboBox*>(component);
                 std::uint8_t newValue = (pComboBox->getSelectedId() == 1) ? 1 : 0;
                 ret = NanoOcp1::DataFromUint8(newValue);
+            }
+            break;
+        case NanoOcp1::OCP1DATATYPE_INT32:
+            {
+                auto pSlider = static_cast<const juce::Slider*>(component);
+                std::int32_t newValue = static_cast<std::int32_t>(pSlider->getValue());
+                ret = NanoOcp1::DataFromInt32(newValue);
             }
             break;
         case NanoOcp1::OCP1DATATYPE_UINT8:
