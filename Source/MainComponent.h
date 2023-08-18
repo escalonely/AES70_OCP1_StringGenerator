@@ -35,6 +35,10 @@ namespace AES70
     struct Property;
     struct OcaRoot;
 }
+namespace NanoOcp1
+{
+    class NanoOcp1Client;
+}
 
 
 /**
@@ -76,13 +80,19 @@ protected:
      * Re-create the Command, Response, and Notification binary strings, based on the current 
      * configuration of the OCA class, ONo, Property, and Command GUI controls.
      * 
-     * @parameter[out] commandString        The resulting Command binary string.
-     * @parameter[out] responseString       The resulting Response binary string.
-     * @parameter[out] notificationString   The Notification binary string that would result from a PropertyChanged event
-     *                                      in the device. Will only be non-empty if the AddSubscription command is selected.
+     * @parameter[out] commandMemBlock      The resulting Command binary string as a juce::MemoryBlock.
+     * @parameter[out] responseMemBlock     The resulting Response binary string as a juce::MemoryBlock.
+     * @parameter[out] notificationMemBlock The Notification binary string that would result from a PropertyChanged event in the device, 
+     *                                      as a juce::MemoryBlock. Will only be non-empty if the AddSubscription command is selected.
      * @return  True if all strings could be generated successfully.
      */
-    bool CreateBinaryStrings(juce::String& commandString, juce::String& responseString, juce::String& notificationString);
+    bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
+
+    /**
+     * Initialize NanoOcp1Client, which will send and receive messages to & from the device
+     * whenever m_sendButton is pressed.
+     */
+    void StartNanoOcpClient();
 
 
 private:
@@ -119,6 +129,9 @@ private:
     // TextEditor to set the handle of the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandHandleTextEditor;
 
+    // Button to test / send the command string to the device using m_nanoOcp1Client.
+    juce::TextButton m_sendButton;
+
     // TextEditor to display the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandTextEditor;
 
@@ -142,6 +155,9 @@ private:
 
     // AES70/OCA object representing the current configuraion on the GUI
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;
+
+    // OCP1 Client to handle AES70 communication with device.
+    std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

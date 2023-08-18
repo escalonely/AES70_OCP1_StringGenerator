@@ -24,6 +24,8 @@
 
 #include "MainComponent.h"
 #include "AES70.h"
+#include <NanoOcp1.h>
+
 
 /**
  * Command index used for AddSubscription.
@@ -118,8 +120,11 @@ MainComponent::MainComponent()
         m_ocaResponseStatusComboBox(juce::ComboBox("OCA Response Status")),
         m_ocaResponseTextEditor(juce::TextEditor("OCA Response String")),
         m_ocaNotificationTextEditor(juce::TextEditor("OCA Notification String")),
+        m_sendButton(juce::TextButton("String Test Button")),
         m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
 {
+    StartNanoOcpClient();
+
     m_container.addAndMakeVisible(&m_hyperlink);
     m_container.addAndMakeVisible(&m_ocaONoTextEditor);
     m_container.addAndMakeVisible(&m_ocaClassComboBox);
@@ -130,6 +135,7 @@ MainComponent::MainComponent()
     m_container.addAndMakeVisible(&m_ocaCommandDefLevelComboBox);
     m_container.addAndMakeVisible(&m_ocaCommandHandleTextEditor);
     m_container.addAndMakeVisible(&m_ocaCommandTextEditor);
+    m_container.addAndMakeVisible(&m_sendButton);
     m_container.addAndMakeVisible(&m_ocaResponseStatusComboBox);
     m_container.addAndMakeVisible(&m_ocaResponseTextEditor);
     m_container.addChildComponent(&m_ocaNotificationTextEditor); // Invisible until AddSubscription Cmd selected
@@ -161,6 +167,10 @@ MainComponent::MainComponent()
     m_ocaCommandTextEditor.setTextToShowWhenEmpty("This field will show the specified Command string "
         "to be transmitted to an AES70-capable device.", 
         LabelEnabledTextColour);
+
+    m_sendButton.setButtonText("Test");
+    m_sendButton.setHasFocusOutline(true);
+    m_sendButton.setTooltip("Test by transmitting the string to the device."); // TODO: tooltips don't work
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
     m_ocaResponseTextEditor.setReadOnly(true);
@@ -440,6 +450,19 @@ MainComponent::MainComponent()
         UpdateBinaryStrings();
     };
 
+    m_sendButton.onClick = [=]()
+    {
+        DBG("m_sendButton.onClick");
+        
+        juce::MemoryBlock commandMemBlock;
+        juce::MemoryBlock responseMemBlock;
+        juce::MemoryBlock notificationMemBlock;
+        CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
+
+        //m_nanoOcp1Client->sendMessage(commandMemBlock); TODO make method protected?? 
+        m_nanoOcp1Client->sendData(commandMemBlock);
+    };
+
     setSize(AppWindowDefaultWidth, AppWindowDefaultHeight);
     setViewedComponent(&m_container, false);
 
@@ -598,16 +621,24 @@ void MainComponent::CreateValueComponents()
 void MainComponent::UpdateBinaryStrings()
 {
     DBG("UpdateBinaryStrings");
-    juce::String commandString;
-    juce::String responseString;
-    juce::String notificationString;
-    CreateBinaryStrings(commandString, responseString, notificationString);
+
+    juce::MemoryBlock commandMemBlock;
+    juce::MemoryBlock responseMemBlock;
+    juce::MemoryBlock notificationMemBlock;
+    CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
+
+    // Convert juce::MemoryBlock to juce::String
+    // TODO: add support for user-defined byte-separators
+    juce::String commandString = juce::String::toHexString(commandMemBlock.getData(), static_cast<int>(commandMemBlock.getSize()));
+    juce::String responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
+    juce::String notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
+
     m_ocaCommandTextEditor.setText(commandString, juce::dontSendNotification);
     m_ocaResponseTextEditor.setText(responseString, juce::dontSendNotification);
     m_ocaNotificationTextEditor.setText(notificationString, juce::dontSendNotification);
 }
 
-bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::String& responseString, juce::String& notificationString)
+bool MainComponent::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)
 {
     int propIdx = m_ocaPropertyComboBox.getSelectedId();
     int methodIdx = m_ocaCommandComboBox.getSelectedId();
@@ -650,7 +681,7 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
     std::uint8_t responseParamCount(0);
     std::vector<std::uint8_t> responseParamData;
     NanoOcp1::Ocp1CommandDefinition commandDefinition;
-    notificationString.clear();
+    notificationMemBlock.reset();
 
     // Depending on whether the Get, Set, or AddSubscription commands are selected,
     // the commandDefinition will be defined differently.
@@ -685,12 +716,11 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
                                                             static_cast<std::uint16_t>(prop.m_index)).AddSubscriptionCommand();
 
         auto notificationParamData = m_ocaObject->CreateParamDataForComponent(m_ocaNotificationValueComponent.get(), prop);
-        auto notificationMemBlock = NanoOcp1::Ocp1Notification(targetOno, 
-                                                               static_cast<std::uint16_t>(prop.m_defLevel),
-                                                               static_cast<std::uint16_t>(prop.m_index),
-                                                               1 /* paramCount */, 
-                                                               notificationParamData).GetMemoryBlock();
-        notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
+        notificationMemBlock = NanoOcp1::Ocp1Notification(targetOno, 
+                                                          static_cast<std::uint16_t>(prop.m_defLevel),
+                                                          static_cast<std::uint16_t>(prop.m_index),
+                                                          1 /* paramCount */, 
+                                                          notificationParamData).GetMemoryBlock();
     }
 
     std::uint32_t dummyHandle; // Auto-generated by Ocp1CommandResponseRequired, will be thrown away.
@@ -700,11 +730,8 @@ bool MainComponent::CreateBinaryStrings(juce::String& commandString, juce::Strin
     std::uint32_t userHandle(static_cast<std::uint32_t>(m_ocaCommandHandleTextEditor.getText().getIntValue()));
     ocp1Command.SetHandle(userHandle);
 
-    auto commandMemBlock = ocp1Command.GetMemoryBlock();
-    commandString = juce::String::toHexString(commandMemBlock.getData(), static_cast<int>(commandMemBlock.getSize()));
-
-    auto responseMemBlock = NanoOcp1::Ocp1Response(userHandle, responseStatus, responseParamCount, responseParamData).GetMemoryBlock();
-    responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
+    commandMemBlock = ocp1Command.GetMemoryBlock();
+    responseMemBlock = NanoOcp1::Ocp1Response(userHandle, responseStatus, responseParamCount, responseParamData).GetMemoryBlock();
 
     return true;
 }
@@ -792,6 +819,7 @@ void MainComponent::resized()
 
     // Row 7
     rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f));
+    m_sendButton.setBounds(rowBounds.removeFromRight(static_cast<int>(comboBoxWidth * 0.5f)).reduced(margin));
     m_ocaCommandTextEditor.setBounds(rowBounds.reduced(margin));
 
     // Vertical spacer
@@ -825,4 +853,35 @@ void MainComponent::resized()
 
     // Call base class implementation which takes care of updating scrollbars etc.
     return juce::Viewport::resized();
+}
+
+void MainComponent::StartNanoOcpClient()
+{
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
+    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
+    {
+        auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
+        
+        // TODO display message on the GUI
+
+        DBG("onDataReceived: " + receivedStr);
+
+        return true;
+    };
+
+    m_nanoOcp1Client->onConnectionEstablished = [=]()
+    {
+        DBG("onConnectionEstablished");
+
+        // TODO: show on the GUI
+    };
+
+    m_nanoOcp1Client->onConnectionLost = [=]()
+    {
+        DBG("onConnectionLost");
+
+        // TODO: show on the GUI
+    };
+
+    m_nanoOcp1Client->start();
 }

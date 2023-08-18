@@ -8,6 +8,16 @@
     <GROUP id="{4187CFA9-5D91-7F98-1636-F2209B89AF25}" name="submodules">
       <GROUP id="{97D5A005-6FA8-BCBE-409C-259301295DC6}" name="NanoOcp">
         <GROUP id="{25B83AC1-8C06-2583-E248-C22542F76780}" name="Source">
+          <FILE id="KIS1OA" name="NanoOcp1.cpp" compile="1" resource="0" file="submodules/NanoOcp/Source/NanoOcp1.cpp"/>
+          <FILE id="TtpZKE" name="NanoOcp1.h" compile="0" resource="0" file="submodules/NanoOcp/Source/NanoOcp1.h"/>
+          <FILE id="OAMEEu" name="Ocp1Connection.cpp" compile="1" resource="0"
+                file="submodules/NanoOcp/Source/Ocp1Connection.cpp"/>
+          <FILE id="wChc3z" name="Ocp1Connection.h" compile="0" resource="0"
+                file="submodules/NanoOcp/Source/Ocp1Connection.h"/>
+          <FILE id="MAuegt" name="Ocp1ConnectionServer.cpp" compile="1" resource="0"
+                file="submodules/NanoOcp/Source/Ocp1ConnectionServer.cpp"/>
+          <FILE id="h2iPok" name="Ocp1ConnectionServer.h" compile="0" resource="0"
+                file="submodules/NanoOcp/Source/Ocp1ConnectionServer.h"/>
           <FILE id="rvWjXy" name="Ocp1Message.cpp" compile="1" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.cpp"/>
           <FILE id="YOVqxa" name="Ocp1Message.h" compile="0" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.h"/>
         </GROUP>
