@@ -87,6 +87,9 @@ protected:
 
 
 private:
+    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
+    MainTabbedComponent* m_parent;
+
     // Component inside the main juce::Viewport, set with setViewedComponent.
     juce::Component m_container;
 
@@ -146,9 +149,6 @@ private:
 
     // AES70/OCA object representing the current configuraion on the GUI
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;
-
-    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
-    MainTabbedComponent* m_parent;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StringGeneratorPage)

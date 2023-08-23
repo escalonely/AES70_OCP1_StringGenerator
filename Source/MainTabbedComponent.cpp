@@ -97,11 +97,14 @@ void MainTabbedComponent::StartNanoOcpClient()
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
     {
+        // Pass message to the TestPage tab for displaying.
+        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        testPage->AddMessage(message);
+
+#if JUCE_DEBUG
         auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
-
-        // TODO display message on the GUI
-
         DBG("onDataReceived: " + receivedStr);
+#endif
 
         return true;
     };
