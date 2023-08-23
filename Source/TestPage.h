@@ -51,6 +51,14 @@ public:
      */
     void AddMessage(const juce::MemoryBlock& message);
 
+    /**
+     * Update the status LED m_stateLed to display the current ConnectionStatus.
+     *
+     * @param[in] connectionStatus TODO define enum.
+     */
+    void SetConnectionStatus(int connectionStatus);
+
+
     // Reimplemented from juce::Component
 
     void paint(juce::Graphics&) override;
@@ -73,6 +81,9 @@ private:
 
     // TextEditor to enter the port of the remote test device.
     juce::TextEditor m_ipPortEdit;
+
+    // TextButton misused as LED for displaying the connection status with the remote test device.
+    juce::TextButton m_stateLed;
 
     // TextEditor to display incoming messages (Responses and Notifications).
     juce::TextEditor m_incomingMessageDisplayEdit;

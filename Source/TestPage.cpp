@@ -37,6 +37,7 @@ enum GuiLabels
     LABELIDX_TITLE = 0,
     LABELIDX_IP_ADDRESS,
     LABELIDX_IP_PORT,
+    LABELIDX_IP_STATUS,
     LABELIDX_MESSAGE_DISPLAY,
     LABELIDX_MAX,
 };
@@ -48,6 +49,7 @@ static const std::vector<juce::String> GuiLabelsText = {
     /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
     /* LABELIDX_IP_ADDRESS,        */ "IP Address:",
     /* LABELIDX_IP_PORT,           */ "Port:",
+    /* LABELIDX_IP_STATUS,         */ "Status:",
     /* LABELIDX_MESSAGE_DISPLAY,   */ "Inbox:",
     /* LABELIDX_MAX,               */ "MAX"
 };
@@ -61,6 +63,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     :   m_parent(parent),
         m_ipAddressEdit(juce::TextEditor("IpAddressEdit")),
         m_ipPortEdit(juce::TextEditor("IpAddressEdit")),
+        m_stateLed(juce::TextButton("StatusLed")),
         m_incomingMessageDisplayEdit(juce::TextEditor("MessageDisplayEdit")),
         m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
 {
@@ -69,6 +72,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     addAndMakeVisible(&m_hyperlink);
     addAndMakeVisible(&m_ipAddressEdit);
     addAndMakeVisible(&m_ipPortEdit);
+    addAndMakeVisible(&m_stateLed);
     addAndMakeVisible(&m_incomingMessageDisplayEdit);
 
     // Create and add all labels on the GUI
@@ -112,6 +116,11 @@ TestPage::TestPage(MainTabbedComponent* parent)
         // TODO: reconnect 
     };
 
+    m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::green);
+    m_stateLed.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::dimgrey);
+    m_stateLed.setToggleState(false, dontSendNotification);
+    m_stateLed.setEnabled(false);
+
     m_incomingMessageDisplayEdit.setHasFocusOutline(true);
     m_incomingMessageDisplayEdit.setReadOnly(true);
     m_incomingMessageDisplayEdit.setCaretVisible(false);
@@ -136,6 +145,37 @@ void TestPage::AddMessage(const juce::MemoryBlock& message)
     m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString + "\r\n");
 }
 
+void TestPage::SetConnectionStatus(int connectionStatus)
+{
+    juce::String status("?");
+
+    switch (connectionStatus)
+    {
+    case 1: // ConnectionStatus_Connecting
+        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::blue);
+        m_stateLed.setToggleState(true, juce::dontSendNotification);
+        status = juce::String("Connecting");
+        break;
+    case 2: // ConnectionStatus_Timeout
+        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::yellow);
+        m_stateLed.setToggleState(true, juce::dontSendNotification);
+        status = juce::String("Timeout");
+        break;
+    case 3: // ConnectionStatus_Online
+        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::green);
+        m_stateLed.setToggleState(true, juce::dontSendNotification);
+        status = juce::String("Online");
+        break;
+    default: // ConnectionStatus_Offline
+        m_stateLed.setToggleState(false, juce::dontSendNotification);
+        status = juce::String("Offline");
+        break;
+    }
+
+    m_stateLed.setButtonText(status);
+    DBG("SetConnectionStatus: " + status);
+}
+
 void TestPage::paint(juce::Graphics& g)
 {
     // TODO: anything to do here? Just call base implementation for now.
@@ -150,7 +190,7 @@ void TestPage::resized()
     bounds.removeFromRight(4);
     int margin = 2;
     int controlHeight = 40;
-    int comboBoxWidth = bounds.getWidth() / 5; // 5 columns. 
+    int comboBoxWidth = bounds.getWidth() / 7; // 7 columns. 
 
     // Row 1
     auto rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 0.75));
@@ -169,6 +209,8 @@ void TestPage::resized()
     m_ipAddressEdit.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
     m_ocaLabels.at(LABELIDX_IP_PORT)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ipPortEdit.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_ocaLabels.at(LABELIDX_IP_STATUS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_stateLed.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
     // Vertical spacer
     bounds.removeFromTop(controlHeight / 2);

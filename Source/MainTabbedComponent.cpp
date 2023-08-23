@@ -135,14 +135,18 @@ void MainTabbedComponent::StartNanoOcpClient()
     {
         DBG("onConnectionEstablished");
 
-        // TODO: show on the GUI
+        // Pass connection status to TestPage tab in order to update status LED on the GUI
+        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        testPage->SetConnectionStatus(3);
     };
 
     m_nanoOcp1Client->onConnectionLost = [=]()
     {
         DBG("onConnectionLost");
 
-        // TODO: show on the GUI
+        // Pass connection status to TestPage tab in order to update status LED on the GUI
+        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        testPage->SetConnectionStatus(0);
     };
 
     m_nanoOcp1Client->start();
