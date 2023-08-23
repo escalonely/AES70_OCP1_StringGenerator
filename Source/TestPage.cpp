@@ -125,6 +125,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_incomingMessageDisplayEdit.setReadOnly(true);
     m_incomingMessageDisplayEdit.setCaretVisible(false);
     m_incomingMessageDisplayEdit.setMultiLine(true, true);
+    m_incomingMessageDisplayEdit.setScrollbarsShown(true);
     m_incomingMessageDisplayEdit.setTextToShowWhenEmpty("This field will show incoming AES70 OCP.1 "
         "messages, should any arrive.",
         LabelEnabledTextColour);
@@ -141,8 +142,13 @@ TestPage::~TestPage()
 void TestPage::AddMessage(const juce::MemoryBlock& message)
 {
     juce::String incomingString = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
+
+    // TODO: make addition of timestamp optional
+    String timestamp = Time::getCurrentTime().toString(true, true, true, true);
+    incomingString = timestamp + juce::String(": ") + incomingString + juce::String("\r\n");
+
     m_incomingMessageDisplayEdit.moveCaretToEnd();
-    m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString + "\r\n");
+    m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString);
 }
 
 void TestPage::SetConnectionStatus(int connectionStatus)
