@@ -28,6 +28,12 @@
 
 
 /**
+ * Forward declarations.
+ */
+class MainTabbedComponent;
+
+
+/**
  * Component for testing the generated OCP.1 binary strings against real AES70-capable
  * devices via TCP/IP. This page provides GUI elements for TCP connection configuration,
  * as well as fields for monitoring the incoming OCP.1 Notifications and Responses.
@@ -35,7 +41,7 @@
 class TestPage : public juce::Component
 {
 public:
-    TestPage();
+    TestPage(MainTabbedComponent* parent);
     ~TestPage() override;
 
 
@@ -50,6 +56,8 @@ protected:
 
 
 private:
+    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
+    MainTabbedComponent* m_parent;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestPage)

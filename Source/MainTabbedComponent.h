@@ -26,6 +26,14 @@
 
 #include <JuceHeader.h>
 
+/**
+ * Forward declarations.
+ */
+namespace NanoOcp1
+{
+    class NanoOcp1Client;
+}
+
 
 /**
  * Custom juce::TabbedComponent, a component with a TabbedButtonBar along the top.
@@ -38,6 +46,7 @@ public:
     MainTabbedComponent();
     ~MainTabbedComponent() override;
 
+    bool SendCommandToDevice(const juce::MemoryBlock& data);
 
     // Reimplemented from juce::TabbedComponent
 
@@ -53,9 +62,17 @@ public:
 
 
 protected:
+    /**
+     * Initialize NanoOcp1Client, which will send and receive messages to & from the device
+     * whenever m_sendButton is pressed.
+     */
+    void StartNanoOcpClient();
 
 
 private:
+    // OCP1 Client to handle AES70 communication with device.
+    // TODO: why unique_ptr? Just put on the stack.
+    std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainTabbedComponent)

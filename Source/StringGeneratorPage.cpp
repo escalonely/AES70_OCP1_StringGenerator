@@ -23,8 +23,8 @@
 */
 
 #include "StringGeneratorPage.h"
+#include "MainTabbedComponent.h"
 #include "AES70.h"
-#include <NanoOcp1.h>
 
 
 /**
@@ -107,8 +107,9 @@ static const std::vector<juce::String> GuiLabelsText = {
 // Class StringGeneratorPage
 //==============================================================================
 
-StringGeneratorPage::StringGeneratorPage()
-    :   m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
+StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
+    :   m_parent(parent),
+        m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
         m_ocaPropertyComboBox(juce::ComboBox("OCA Property Idx")),
         m_ocaPropertyDefLevelComboBox(juce::ComboBox("OCA Property DefLevel")),
@@ -123,7 +124,7 @@ StringGeneratorPage::StringGeneratorPage()
         m_sendButton(juce::TextButton("String Test Button")),
         m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
 {
-    StartNanoOcpClient();
+    jassert(parent != nullptr);
 
     m_container.addAndMakeVisible(&m_hyperlink);
     m_container.addAndMakeVisible(&m_ocaONoTextEditor);
@@ -459,8 +460,8 @@ StringGeneratorPage::StringGeneratorPage()
         juce::MemoryBlock notificationMemBlock;
         CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
 
-        //m_nanoOcp1Client->sendMessage(commandMemBlock); TODO make method protected?? 
-        m_nanoOcp1Client->sendData(commandMemBlock);
+        // Pass command MemoryBlock to the parent MainTabbedComponent.
+        m_parent->SendCommandToDevice(commandMemBlock);
     };
 
     setSize(AppWindowDefaultWidth, AppWindowDefaultHeight);
@@ -855,33 +856,3 @@ void StringGeneratorPage::resized()
     return juce::Viewport::resized();
 }
 
-void StringGeneratorPage::StartNanoOcpClient()
-{
-    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
-    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
-    {
-        auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
-        
-        // TODO display message on the GUI
-
-        DBG("onDataReceived: " + receivedStr);
-
-        return true;
-    };
-
-    m_nanoOcp1Client->onConnectionEstablished = [=]()
-    {
-        DBG("onConnectionEstablished");
-
-        // TODO: show on the GUI
-    };
-
-    m_nanoOcp1Client->onConnectionLost = [=]()
-    {
-        DBG("onConnectionLost");
-
-        // TODO: show on the GUI
-    };
-
-    m_nanoOcp1Client->start();
-}

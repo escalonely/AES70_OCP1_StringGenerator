@@ -30,14 +30,11 @@
 /**
  * Forward declarations.
  */
+class MainTabbedComponent;
 namespace AES70
 {
     struct Property;
     struct OcaRoot;
-}
-namespace NanoOcp1
-{
-    class NanoOcp1Client;
 }
 
 
@@ -48,7 +45,7 @@ namespace NanoOcp1
 class StringGeneratorPage : public juce::Viewport
 {
 public:
-    StringGeneratorPage();
+    StringGeneratorPage(MainTabbedComponent* parent);
     ~StringGeneratorPage() override;
 
     // Reimplemented from juce::Component
@@ -87,12 +84,6 @@ protected:
      * @return  True if all strings could be generated successfully.
      */
     bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
-
-    /**
-     * Initialize NanoOcp1Client, which will send and receive messages to & from the device
-     * whenever m_sendButton is pressed.
-     */
-    void StartNanoOcpClient();
 
 
 private:
@@ -156,8 +147,8 @@ private:
     // AES70/OCA object representing the current configuraion on the GUI
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;
 
-    // OCP1 Client to handle AES70 communication with device.
-    std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
+    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
+    MainTabbedComponent* m_parent;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StringGeneratorPage)

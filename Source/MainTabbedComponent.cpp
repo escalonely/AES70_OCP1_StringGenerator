@@ -25,6 +25,7 @@
 #include "MainTabbedComponent.h"
 #include "TestPage.h"
 #include "StringGeneratorPage.h"
+#include <NanoOcp1.h>
 
 
 static const juce::Colour AppBackgroundColour(43, 65, 77); // TODO: have common definition somewhere
@@ -34,12 +35,12 @@ MainTabbedComponent::MainTabbedComponent()
     : juce::TabbedComponent(juce::TabbedButtonBar::TabsAtTop)
 {
     // First tab is always the "Test" tab
-    addTab("Test", AppBackgroundColour, new TestPage(), true);
+    addTab("Test", AppBackgroundColour, new TestPage(this), true);
 
     // TODO: load tabs from config file
 
     // Add one StringGeneratorPage tab per default.
-    auto firstMainPage = new StringGeneratorPage();
+    auto firstMainPage = new StringGeneratorPage(this);
     auto mainPageBounds = firstMainPage->getBounds();
     addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
 
@@ -50,7 +51,7 @@ MainTabbedComponent::MainTabbedComponent()
         // Clicking on the "+" tab will add a new StringGeneratorPage tab, 
         // ensuring that the "+" tab remains as the rightmost tab.
         int newTabNumber = getNumTabs() - 1;
-        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new StringGeneratorPage(), true, newTabNumber);
+        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new StringGeneratorPage(this), true, newTabNumber);
         setCurrentTabIndex(newTabNumber);
     };
 
@@ -60,6 +61,9 @@ MainTabbedComponent::MainTabbedComponent()
     // Resize the MainTabbedComponent based on the size of a StringGeneratorPage component,
     // taking into account the height of the TabBar itself. TODO: get rid of magic numbers.
     setSize(mainPageBounds.getWidth() + 3, mainPageBounds.getHeight() + getTabBarDepth() + 2);
+
+    // Initialize the NanoOcp1::NanoOcp1Client m_nanoOcp1Client. 
+    StartNanoOcpClient();
 }
 
 MainTabbedComponent::~MainTabbedComponent()
@@ -86,4 +90,46 @@ void MainTabbedComponent::resized()
     // TODO: anything to do here? Just call base implementation for now.
 
     juce::TabbedComponent::resized();
+}
+
+void MainTabbedComponent::StartNanoOcpClient()
+{
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
+    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
+    {
+        auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
+
+        // TODO display message on the GUI
+
+        DBG("onDataReceived: " + receivedStr);
+
+        return true;
+    };
+
+    m_nanoOcp1Client->onConnectionEstablished = [=]()
+    {
+        DBG("onConnectionEstablished");
+
+        // TODO: show on the GUI
+    };
+
+    m_nanoOcp1Client->onConnectionLost = [=]()
+    {
+        DBG("onConnectionLost");
+
+        // TODO: show on the GUI
+    };
+
+    m_nanoOcp1Client->start();
+}
+
+bool MainTabbedComponent::SendCommandToDevice(const juce::MemoryBlock& data)
+{
+    if (m_nanoOcp1Client && m_nanoOcp1Client->isConnected())
+    {
+        //m_nanoOcp1Client->sendMessage(commandMemBlock); TODO make method protected?? 
+        return m_nanoOcp1Client->sendData(data);
+    }
+
+    return false;
 }

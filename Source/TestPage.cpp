@@ -23,10 +23,14 @@
 */
 
 #include "TestPage.h"
+#include "MainTabbedComponent.h"
 
 
-TestPage::TestPage()
+TestPage::TestPage(MainTabbedComponent* parent)
+    :   m_parent(parent)
 {
+    jassert(parent != nullptr);
+
     // TODO: create GUI elements
 
     setSize(10, 10);
