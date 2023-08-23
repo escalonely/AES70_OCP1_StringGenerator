@@ -437,7 +437,6 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
 
     m_ocaCommandDefLevelComboBox.onChange = [=]()
     {
-        // Update the binary strings.
         UpdateBinaryStrings();
     };
 
