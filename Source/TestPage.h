@@ -44,6 +44,12 @@ public:
     TestPage(MainTabbedComponent* parent);
     ~TestPage() override;
 
+    /**
+     * Display an incoming message on the m_incomingMessageDisplayEdit
+     * 
+     * @param[in] message   Message which will be converted to String for displaying.
+     */
+    void AddMessage(const juce::MemoryBlock& message);
 
     // Reimplemented from juce::Component
 
@@ -58,6 +64,21 @@ protected:
 private:
     // Parent TabbedComponent which contains this page component as one or more of its tabs. 
     MainTabbedComponent* m_parent;
+
+    // Hyperlink to the project webpage.
+    juce::HyperlinkButton m_hyperlink;
+
+    // TextEditor to enter the IP address of the remote test device.
+    juce::TextEditor m_ipAddressEdit;
+
+    // TextEditor to enter the port of the remote test device.
+    juce::TextEditor m_ipPortEdit;
+
+    // TextEditor to display incoming messages (Responses and Notifications).
+    juce::TextEditor m_incomingMessageDisplayEdit;
+
+    // Labels on the UI. NOTE: use a vector of pointers because juce::Label is non-copyable.
+    std::vector<std::unique_ptr<juce::Label>> m_ocaLabels;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestPage)
