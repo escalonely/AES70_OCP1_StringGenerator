@@ -24,7 +24,7 @@
 
 #include "MainTabbedComponent.h"
 #include "TestPage.h"
-#include "MainComponent.h"
+#include "StringGeneratorPage.h"
 
 
 static const juce::Colour AppBackgroundColour(43, 65, 77); // TODO: have common definition somewhere
@@ -39,7 +39,7 @@ MainTabbedComponent::MainTabbedComponent()
     // TODO: load tabs from config file
 
     // Add one StringGeneratorPage tab per default.
-    auto firstMainPage = new MainComponent();
+    auto firstMainPage = new StringGeneratorPage();
     auto mainPageBounds = firstMainPage->getBounds();
     addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
 
@@ -50,7 +50,7 @@ MainTabbedComponent::MainTabbedComponent()
         // Clicking on the "+" tab will add a new StringGeneratorPage tab, 
         // ensuring that the "+" tab remains as the rightmost tab.
         int newTabNumber = getNumTabs() - 1;
-        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new MainComponent(), true, newTabNumber);
+        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new StringGeneratorPage(), true, newTabNumber);
         setCurrentTabIndex(newTabNumber);
     };
 

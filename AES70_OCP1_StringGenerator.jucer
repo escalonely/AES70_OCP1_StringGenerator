@@ -38,9 +38,10 @@
       <FILE id="UQu58X" name="AES70.cpp" compile="1" resource="0" file="Source/AES70.cpp"/>
       <FILE id="BFeQKw" name="AES70.h" compile="0" resource="0" file="Source/AES70.h"/>
       <FILE id="ubHQdS" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="HWPVHX" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="u8yfWC" name="MainComponent.cpp" compile="1" resource="0"
-            file="Source/MainComponent.cpp"/>
+      <FILE id="HWPVHX" name="StringGeneratorPage.h" compile="0" resource="0"
+            file="Source/StringGeneratorPage.h"/>
+      <FILE id="u8yfWC" name="StringGeneratorPage.cpp" compile="1" resource="0"
+            file="Source/StringGeneratorPage.cpp"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>

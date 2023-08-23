@@ -42,14 +42,14 @@ namespace NanoOcp1
 
 
 /**
- * Main component displayed on the application's UI.
+ * Component for configuring and generating OCP.1 binary strings.
  * It inherits from juce::Viewport to allow scrolling through the contents inside.
  */
-class MainComponent  : public juce::Viewport
+class StringGeneratorPage : public juce::Viewport
 {
 public:
-    MainComponent();
-    ~MainComponent() override;
+    StringGeneratorPage();
+    ~StringGeneratorPage() override;
 
     // Reimplemented from juce::Component
 
@@ -160,5 +160,5 @@ private:
     std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
 
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StringGeneratorPage)
 };

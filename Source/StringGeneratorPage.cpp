@@ -22,7 +22,7 @@
 ===============================================================================
 */
 
-#include "MainComponent.h"
+#include "StringGeneratorPage.h"
 #include "AES70.h"
 #include <NanoOcp1.h>
 
@@ -104,10 +104,10 @@ static const std::vector<juce::String> GuiLabelsText = {
 
 
 //==============================================================================
-// Class MainComponent
+// Class StringGeneratorPage
 //==============================================================================
 
-MainComponent::MainComponent()
+StringGeneratorPage::StringGeneratorPage()
     :   m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
         m_ocaPropertyComboBox(juce::ComboBox("OCA Property Idx")),
@@ -469,11 +469,11 @@ MainComponent::MainComponent()
     ResetComponents(WORKFLOW_STEP_SELECT_CLASS);
 }
 
-MainComponent::~MainComponent()
+StringGeneratorPage::~StringGeneratorPage()
 {
 }
 
-void MainComponent::ResetComponents(int step)
+void StringGeneratorPage::ResetComponents(int step)
 {
     DBG("ResetComponents step " + juce::String(step));
 
@@ -548,7 +548,7 @@ void MainComponent::ResetComponents(int step)
         resized();
 }
 
-void MainComponent::CreateValueComponents()
+void StringGeneratorPage::CreateValueComponents()
 {
     int propIdx = m_ocaPropertyComboBox.getSelectedId();
     int methodIdx = m_ocaCommandComboBox.getSelectedId();
@@ -618,7 +618,7 @@ void MainComponent::CreateValueComponents()
     resized();
 }
 
-void MainComponent::UpdateBinaryStrings()
+void StringGeneratorPage::UpdateBinaryStrings()
 {
     DBG("UpdateBinaryStrings");
 
@@ -638,7 +638,7 @@ void MainComponent::UpdateBinaryStrings()
     m_ocaNotificationTextEditor.setText(notificationString, juce::dontSendNotification);
 }
 
-bool MainComponent::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)
+bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)
 {
     int propIdx = m_ocaPropertyComboBox.getSelectedId();
     int methodIdx = m_ocaCommandComboBox.getSelectedId();
@@ -736,7 +736,7 @@ bool MainComponent::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce
     return true;
 }
 
-void MainComponent::paint(juce::Graphics& g)
+void StringGeneratorPage::paint(juce::Graphics& g)
 {
     g.fillAll(AppBackgroundColour);
 
@@ -749,7 +749,7 @@ void MainComponent::paint(juce::Graphics& g)
     }
 }
 
-void MainComponent::resized()
+void StringGeneratorPage::resized()
 {
     // The height of the container component within the Viewport depends on how much 
     // content needs to be displayed. So m_container grows as more components are required. 
@@ -855,7 +855,7 @@ void MainComponent::resized()
     return juce::Viewport::resized();
 }
 
-void MainComponent::StartNanoOcpClient()
+void StringGeneratorPage::StartNanoOcpClient()
 {
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
