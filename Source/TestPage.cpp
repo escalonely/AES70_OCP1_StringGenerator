@@ -134,8 +134,6 @@ void TestPage::AddMessage(const juce::MemoryBlock& message)
     juce::String incomingString = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
     m_incomingMessageDisplayEdit.moveCaretToEnd();
     m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString + "\r\n");
-
-    // TODO: mark unread message
 }
 
 void TestPage::paint(juce::Graphics& g)

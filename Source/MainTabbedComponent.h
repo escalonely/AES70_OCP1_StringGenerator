@@ -51,7 +51,7 @@ public:
     // Reimplemented from juce::TabbedComponent
 
     TabBarButton* createTabButton(const String& tabName, int tabIndex) override;
-    //void currentTabChanged(int newCurrentTabIndex, const String& newCurrentTabName) override;
+    void currentTabChanged(int newCurrentTabIndex, const String& newCurrentTabName) override;
     //void popupMenuClickOnTab(int tabIndex, const String& tabName) override;
 
 
@@ -73,6 +73,10 @@ private:
     // OCP1 Client to handle AES70 communication with device.
     // TODO: why unique_ptr? Just put on the stack.
     std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
+
+    // Number of messages that have been passed to the TestPage for displaying
+    // since the last time that the TestPage has been the active tab (See currentTabChanged).
+    int m_numUnreadMessages;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainTabbedComponent)

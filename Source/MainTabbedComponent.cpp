@@ -29,13 +29,15 @@
 
 
 static const juce::Colour AppBackgroundColour(43, 65, 77); // TODO: have common definition somewhere
+static const juce::String TestPageDefaultName("Test"); // Default name to show on the page's tab.
 
 
 MainTabbedComponent::MainTabbedComponent()
-    : juce::TabbedComponent(juce::TabbedButtonBar::TabsAtTop)
+    :   juce::TabbedComponent(juce::TabbedButtonBar::TabsAtTop),
+        m_numUnreadMessages(0)
 {
     // First tab is always the "Test" tab
-    addTab("Test", AppBackgroundColour, new TestPage(this), true);
+    addTab(TestPageDefaultName, AppBackgroundColour, new TestPage(this), true);
 
     // TODO: load tabs from config file
 
@@ -78,6 +80,16 @@ TabBarButton* MainTabbedComponent::createTabButton(const String& tabName, int ta
     return juce::TabbedComponent::createTabButton(tabName, tabIndex);
 }
 
+void MainTabbedComponent::currentTabChanged(int newCurrentTabIndex, const String& /*newCurrentTabName*/)
+{
+    if (newCurrentTabIndex == 0) // TODO use define
+    {
+        // TODO: reset tab's name to clear the "unread messages" mark.
+        setTabName(0, TestPageDefaultName);
+        m_numUnreadMessages = 0;
+    }
+}
+
 void MainTabbedComponent::paint(juce::Graphics& g)
 {
     // TODO: anything to do here? Just call base implementation for now.
@@ -105,6 +117,16 @@ void MainTabbedComponent::StartNanoOcpClient()
         auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
         DBG("onDataReceived: " + receivedStr);
 #endif
+
+        // Mark the TestPage's tab with "unread messages".
+        if (getCurrentTabIndex() != 0)
+        {
+            m_numUnreadMessages++;
+            setTabName(0, TestPageDefaultName + 
+                            juce::String(" (" + 
+                            juce::String(m_numUnreadMessages) + 
+                            juce::String(")")));
+        }
 
         return true;
     };
