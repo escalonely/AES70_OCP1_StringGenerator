@@ -166,7 +166,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
     m_ocaCommandTextEditor.setCaretVisible(false);
     m_ocaCommandTextEditor.setMultiLine(true, true);
     m_ocaCommandTextEditor.setTextToShowWhenEmpty("This field will show the specified Command string "
-        "to be transmitted to an AES70-capable device.", 
+        "which can be transmitted to a device.", 
         LabelEnabledTextColour);
 
     m_sendButton.setButtonText("Test");
@@ -480,6 +480,7 @@ void StringGeneratorPage::ResetComponents(int step)
     bool resizeNeeded(false);
     m_ocaCommandTextEditor.clear();
     m_ocaResponseTextEditor.clear();
+    m_sendButton.setEnabled(false);
     if (step < WORKFLOW_STEP_ENTER_SET_VALUE)
     {
         // Reset status back to OK
@@ -636,6 +637,8 @@ void StringGeneratorPage::UpdateBinaryStrings()
     m_ocaCommandTextEditor.setText(commandString, juce::dontSendNotification);
     m_ocaResponseTextEditor.setText(responseString, juce::dontSendNotification);
     m_ocaNotificationTextEditor.setText(notificationString, juce::dontSendNotification);
+
+    m_sendButton.setEnabled(true);
 }
 
 bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)

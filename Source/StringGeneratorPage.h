@@ -123,11 +123,11 @@ private:
     // TextEditor to set the handle of the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandHandleTextEditor;
 
-    // Button to test / send the command string to the device using m_nanoOcp1Client.
-    juce::TextButton m_sendButton;
-
     // TextEditor to display the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandTextEditor;
+
+    // Button to test / send the command string to the device using m_nanoOcp1Client.
+    juce::TextButton m_sendButton;
 
     // ComboBox to select the AES70/OCA Response status
     juce::ComboBox m_ocaResponseStatusComboBox;
