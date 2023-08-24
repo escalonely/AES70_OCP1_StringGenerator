@@ -30,6 +30,7 @@
 
 static const juce::Colour AppBackgroundColour(43, 65, 77); // TODO: have common definition somewhere
 static const juce::String TestPageDefaultName("Test"); // Default name to show on the page's tab.
+static constexpr int TestPageTabIndex(0); // TestPage will always be the leftmost tab.
 
 
 MainTabbedComponent::MainTabbedComponent()
@@ -117,10 +118,10 @@ TabBarButton* MainTabbedComponent::createTabButton(const String& tabName, int ta
 
 void MainTabbedComponent::currentTabChanged(int newCurrentTabIndex, const String& /*newCurrentTabName*/)
 {
-    if (newCurrentTabIndex == 0) // TODO use define
+    if (newCurrentTabIndex == TestPageTabIndex)
     {
-        // TODO: reset tab's name to clear the "unread messages" mark.
-        setTabName(0, TestPageDefaultName);
+        // Reset tab's name to clear the "unread messages" mark.
+        setTabName(TestPageTabIndex, TestPageDefaultName);
         m_numUnreadMessages = 0;
     }
 }
@@ -145,7 +146,7 @@ void MainTabbedComponent::StartNanoOcpClient()
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
     {
         // Pass message to the TestPage tab for displaying.
-        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        auto testPage = static_cast<TestPage*>(getTabContentComponent(TestPageTabIndex));
         testPage->AddMessage(message);
 
 #if JUCE_DEBUG
@@ -154,13 +155,13 @@ void MainTabbedComponent::StartNanoOcpClient()
 #endif
 
         // Mark the TestPage's tab with "unread messages".
-        if (getCurrentTabIndex() != 0)
+        if (getCurrentTabIndex() != TestPageTabIndex)
         {
             m_numUnreadMessages++;
-            setTabName(0, TestPageDefaultName + 
-                            juce::String(" (" + 
-                            juce::String(m_numUnreadMessages) + 
-                            juce::String(")")));
+            setTabName(TestPageTabIndex, TestPageDefaultName +
+                                         juce::String(" (" + 
+                                         juce::String(m_numUnreadMessages) + 
+                                         juce::String(")")));
         }
 
         return true;
@@ -171,7 +172,7 @@ void MainTabbedComponent::StartNanoOcpClient()
         DBG("onConnectionEstablished");
 
         // Pass connection status to TestPage tab in order to update status LED on the GUI
-        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(TestPageTabIndex));
         testPage->SetConnectionStatus(3);
     };
 
@@ -180,7 +181,7 @@ void MainTabbedComponent::StartNanoOcpClient()
         DBG("onConnectionLost");
 
         // Pass connection status to TestPage tab in order to update status LED on the GUI
-        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(0));
+        auto testPage = static_cast<TestPage*>(this->getTabContentComponent(TestPageTabIndex));
         testPage->SetConnectionStatus(0);
     };
 
