@@ -24,6 +24,7 @@
 
 #include "StringGeneratorPage.h"
 #include "MainTabbedComponent.h"
+#include "Common.h"
 #include "AES70.h"
 
 
@@ -36,16 +37,6 @@ static constexpr int MethodIndexForAddSubscription = 256;
  * Index used for custom (aka proprietary, non-standard) AES70 classes.
  */
 static constexpr int ClassIndexForCustomClass = 256;
-
-static constexpr int AppWindowDefaultWidth = 640; // Default App window width.
-static constexpr int AppWindowDefaultHeight = 480; // Default App window height, also used for m_container within the juce::Viewport.
-
-static const juce::Colour AppBackgroundColour(43, 65, 77);          // App window background color
-static const juce::Colour LabelEnabledTextColour(125, 182, 212);    // Color for labels of relevant controls
-static const juce::Colour LabelDisabledTextColour(12, 12, 12);      // Color for labels of non-relevant controls
-
-static const juce::String ProjectHostShortURL("https://github.com/escalonely"); // Web address of this project's host.
-static const juce::String ProjectHostLongURL("https://github.com/escalonely/AES70_OCP1_StringGenerator"); // Complete web address of this project's host.
 
 /**
  * Expected user workflow, separated in discrete steps.

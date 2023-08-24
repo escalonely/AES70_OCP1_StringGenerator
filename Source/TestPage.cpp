@@ -24,10 +24,8 @@
 
 #include "TestPage.h"
 #include "MainTabbedComponent.h"
+#include "Common.h"
 
-static const juce::Colour LabelEnabledTextColour(125, 182, 212);    // TODO define commonly
-static const juce::String ProjectHostShortURL("https://github.com/escalonely"); // Web address of this project's host.
-static const juce::String ProjectHostLongURL("https://github.com/escalonely/AES70_OCP1_StringGenerator"); // TODO define commonly
 
 /**
  * Indeces of juce::Label components used on the GUI.

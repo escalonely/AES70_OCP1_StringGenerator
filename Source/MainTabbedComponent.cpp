@@ -25,10 +25,10 @@
 #include "MainTabbedComponent.h"
 #include "TestPage.h"
 #include "StringGeneratorPage.h"
+#include "Common.h"
 #include <NanoOcp1.h>
 
 
-static const juce::Colour AppBackgroundColour(43, 65, 77); // TODO: have common definition somewhere
 static const juce::String TestPageDefaultName("Test"); // Default name to show on the page's tab.
 static constexpr int TestPageTabIndex(0); // TestPage will always be the leftmost tab.
 
