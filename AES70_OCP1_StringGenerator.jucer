@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="bMvzN6" name="AES70_OCP1_StringGenerator" projectType="guiapp"
-              jucerFormatVersion="1" version="0.0.2" companyName="escalonely"
+              jucerFormatVersion="1" version="0.0.3" companyName="escalonely"
               companyCopyright="Copyright (C) 2023 Bernardo Escalona" companyWebsite="https://github.com/escalonely"
               headerPath="../../submodules/NanoOcp/Source/&#10;">
   <MAINGROUP id="rBvj44" name="AES70_OCP1_StringGenerator">
