@@ -98,23 +98,32 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_ipAddressEdit.setInputRestrictions(16, "0123456789.");
     m_ipAddressEdit.setIndents(m_ipAddressEdit.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ipAddressEdit.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ipAddressEdit.setText("10000", juce::dontSendNotification);
-
+    
     m_ipAddressEdit.onTextChange = [=]()
     {
-        // TODO: reconnect 
+        if (OnDeviceIpAddressChanged)
+            OnDeviceIpAddressChanged(m_ipAddressEdit.getText(), m_ipPortEdit.getText().getIntValue());
     };
 
     m_ipPortEdit.setHasFocusOutline(true);
     m_ipPortEdit.setInputRestrictions(0, "0123456789");
     m_ipPortEdit.setIndents(m_ipAddressEdit.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ipPortEdit.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ipPortEdit.setText("10000", juce::dontSendNotification);
 
     m_ipPortEdit.onTextChange = [=]()
     {
-        // TODO: reconnect 
+        if (OnDeviceIpAddressChanged)
+            OnDeviceIpAddressChanged(m_ipAddressEdit.getText(), m_ipPortEdit.getText().getIntValue());
     };
+
+    // Initialize displayed ip address and port.
+    juce::String address;
+    int port;
+    if (m_parent->GetConnectionParameters(address, port))
+    {
+        m_ipAddressEdit.setText(address, juce::dontSendNotification);
+        m_ipPortEdit.setText(juce::String(port), juce::dontSendNotification);
+    }
 
     m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::green);
     m_stateLed.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::dimgrey);
@@ -129,7 +138,6 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_incomingMessageDisplayEdit.setTextToShowWhenEmpty("This field will show incoming AES70 OCP.1 "
         "messages, should any arrive.",
         LabelEnabledTextColour);
-
 
     setSize(10, 10);
 }

@@ -58,6 +58,14 @@ public:
      */
     void SetConnectionStatus(int connectionStatus);
 
+    /**
+     * Callback method that is triggered whenever the IP address or port are changed on the GUI by the user.
+     *
+     * @param[in] ipAddress New IP address string.
+     * @param[in] ipPort    New port number.
+     */
+    std::function<void(const juce::String& ipAddress, int ipPort)> OnDeviceIpAddressChanged;
+
 
     // Reimplemented from juce::Component
 

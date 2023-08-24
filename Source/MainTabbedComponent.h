@@ -46,13 +46,28 @@ public:
     MainTabbedComponent();
     ~MainTabbedComponent() override;
 
+    /**
+     * Use m_nanoOcp1Client to send a given MemoryBlock to the connected remote device.
+     * 
+     * @param[in] data  MemoryBlock to send.
+     * @return  True if the message could be sent successfully.
+     */
     bool SendCommandToDevice(const juce::MemoryBlock& data);
+
+    /**
+     * Get the ip address and port currently used by m_nanoOcp1Client.
+     *
+     * @param[out] address  Current IP address
+     * @param[out] port     Current IP port
+     * @return  True if the parameters could be retrieved successfully.
+     */
+    bool GetConnectionParameters(juce::String& address, int& port) const;
+
 
     // Reimplemented from juce::TabbedComponent
 
     TabBarButton* createTabButton(const String& tabName, int tabIndex) override;
     void currentTabChanged(int newCurrentTabIndex, const String& newCurrentTabName) override;
-    //void popupMenuClickOnTab(int tabIndex, const String& tabName) override;
 
 
     // Reimplemented from juce::Component

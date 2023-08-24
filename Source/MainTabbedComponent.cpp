@@ -36,8 +36,22 @@ MainTabbedComponent::MainTabbedComponent()
     :   juce::TabbedComponent(juce::TabbedButtonBar::TabsAtTop),
         m_numUnreadMessages(0)
 {
+    // Initialize the NanoOcp1::NanoOcp1Client m_nanoOcp1Client. 
+    StartNanoOcpClient();
+
     // First tab is always the "Test" tab
-    addTab(TestPageDefaultName, AppBackgroundColour, new TestPage(this), true);
+    auto testPage = new TestPage(this);
+    addTab(TestPageDefaultName, AppBackgroundColour, testPage, true);
+    testPage->OnDeviceIpAddressChanged = [=](const juce::String& ipAddress, int ipPort)
+    {
+        if ((ipAddress != m_nanoOcp1Client->getAddress()) || (ipPort != m_nanoOcp1Client->getPort()))
+        {
+            m_nanoOcp1Client->stop();
+            m_nanoOcp1Client->setAddress(ipAddress);
+            m_nanoOcp1Client->setPort(ipPort);
+            m_nanoOcp1Client->start();
+        }
+    };
 
     // TODO: load tabs from config file
 
@@ -63,14 +77,35 @@ MainTabbedComponent::MainTabbedComponent()
     // Resize the MainTabbedComponent based on the size of a StringGeneratorPage component,
     // taking into account the height of the TabBar itself. TODO: get rid of magic numbers.
     setSize(mainPageBounds.getWidth() + 3, mainPageBounds.getHeight() + getTabBarDepth() + 2);
-
-    // Initialize the NanoOcp1::NanoOcp1Client m_nanoOcp1Client. 
-    StartNanoOcpClient();
 }
 
 MainTabbedComponent::~MainTabbedComponent()
 {
 
+}
+
+bool MainTabbedComponent::SendCommandToDevice(const juce::MemoryBlock& data)
+{
+    if (m_nanoOcp1Client && m_nanoOcp1Client->isConnected())
+    {
+        //m_nanoOcp1Client->sendMessage(commandMemBlock); TODO make method protected?? 
+        return m_nanoOcp1Client->sendData(data);
+    }
+
+    return false;
+}
+
+bool MainTabbedComponent::GetConnectionParameters(juce::String& address, int& port) const
+{
+    if (m_nanoOcp1Client)
+    {
+        address = m_nanoOcp1Client->getAddress();
+        port = m_nanoOcp1Client->getPort();
+
+        return true;
+    }
+
+    return false;
 }
 
 TabBarButton* MainTabbedComponent::createTabButton(const String& tabName, int tabIndex)
@@ -152,13 +187,3 @@ void MainTabbedComponent::StartNanoOcpClient()
     m_nanoOcp1Client->start();
 }
 
-bool MainTabbedComponent::SendCommandToDevice(const juce::MemoryBlock& data)
-{
-    if (m_nanoOcp1Client && m_nanoOcp1Client->isConnected())
-    {
-        //m_nanoOcp1Client->sendMessage(commandMemBlock); TODO make method protected?? 
-        return m_nanoOcp1Client->sendData(data);
-    }
-
-    return false;
-}
