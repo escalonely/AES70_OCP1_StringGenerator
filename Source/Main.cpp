@@ -23,7 +23,7 @@
 */
 
 #include <JuceHeader.h>
-#include "MainComponent.h"
+#include "MainTabbedComponent.h"
 
 class AES70_OCP1_StringGeneratorApplication  : public juce::JUCEApplication
 {
@@ -55,7 +55,7 @@ public:
 
     /*
         This class implements the desktop window that contains an instance of
-        our MainComponent class.
+        our MainTabbedComponent class.
     */
     class MainWindow    : public juce::DocumentWindow
     {
@@ -67,7 +67,7 @@ public:
                               DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new MainComponent(), true);
+            setContentOwned (new MainTabbedComponent(), true);
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);

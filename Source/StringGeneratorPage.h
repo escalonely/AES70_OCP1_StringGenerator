@@ -30,6 +30,7 @@
 /**
  * Forward declarations.
  */
+class MainTabbedComponent;
 namespace AES70
 {
     struct Property;
@@ -38,14 +39,14 @@ namespace AES70
 
 
 /**
- * Main component displayed on the application's UI.
+ * Component for configuring and generating OCP.1 binary strings.
  * It inherits from juce::Viewport to allow scrolling through the contents inside.
  */
-class MainComponent  : public juce::Viewport
+class StringGeneratorPage : public juce::Viewport
 {
 public:
-    MainComponent();
-    ~MainComponent() override;
+    StringGeneratorPage(MainTabbedComponent* parent);
+    ~StringGeneratorPage() override;
 
     // Reimplemented from juce::Component
 
@@ -76,16 +77,19 @@ protected:
      * Re-create the Command, Response, and Notification binary strings, based on the current 
      * configuration of the OCA class, ONo, Property, and Command GUI controls.
      * 
-     * @parameter[out] commandString        The resulting Command binary string.
-     * @parameter[out] responseString       The resulting Response binary string.
-     * @parameter[out] notificationString   The Notification binary string that would result from a PropertyChanged event
-     *                                      in the device. Will only be non-empty if the AddSubscription command is selected.
+     * @parameter[out] commandMemBlock      The resulting Command binary string as a juce::MemoryBlock.
+     * @parameter[out] responseMemBlock     The resulting Response binary string as a juce::MemoryBlock.
+     * @parameter[out] notificationMemBlock The Notification binary string that would result from a PropertyChanged event in the device, 
+     *                                      as a juce::MemoryBlock. Will only be non-empty if the AddSubscription command is selected.
      * @return  True if all strings could be generated successfully.
      */
-    bool CreateBinaryStrings(juce::String& commandString, juce::String& responseString, juce::String& notificationString);
+    bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
 
 
 private:
+    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
+    MainTabbedComponent* m_parent;
+
     // Component inside the main juce::Viewport, set with setViewedComponent.
     juce::Component m_container;
 
@@ -122,6 +126,9 @@ private:
     // TextEditor to display the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandTextEditor;
 
+    // Button to test / send the command string to the device using m_nanoOcp1Client.
+    juce::TextButton m_sendButton;
+
     // ComboBox to select the AES70/OCA Response status
     juce::ComboBox m_ocaResponseStatusComboBox;
 
@@ -144,5 +151,5 @@ private:
     std::unique_ptr<AES70::OcaRoot> m_ocaObject;
 
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StringGeneratorPage)
 };
