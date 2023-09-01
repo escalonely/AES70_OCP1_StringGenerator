@@ -54,12 +54,24 @@ MainTabbedComponent::MainTabbedComponent()
         }
     };
 
-    // TODO: load tabs from config file
+    juce::Rectangle<int> firstPageBounds; // Important for resizing MainTabbedComponent 
 
-    // Add one StringGeneratorPage tab per default.
-    auto firstMainPage = new StringGeneratorPage(this);
-    auto mainPageBounds = firstMainPage->getBounds();
-    addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
+    // Load tabs and pages from config file via commandline.
+    bool parsedConfigFromFile(false);
+    juce::ArgumentList argList("executable", JUCEApplicationBase::getCommandLineParameterArray());
+    if (argList.containsOption("-o"))
+    {
+        juce::File inFile = argList.getFileForOption("-o");
+        parsedConfigFromFile = CreatePagesFromConfigFile(inFile, firstPageBounds);
+    }
+
+    if (!parsedConfigFromFile)
+    {
+        // Add one StringGeneratorPage tab per default.
+        auto firstMainPage = new StringGeneratorPage(this);
+        firstPageBounds = firstMainPage->getBounds();
+        addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
+    }
 
     // Last tab is always the "+" tab
     addTab("+", AppBackgroundColour, new juce::Component(), true);
@@ -77,7 +89,7 @@ MainTabbedComponent::MainTabbedComponent()
 
     // Resize the MainTabbedComponent based on the size of a StringGeneratorPage component,
     // taking into account the height of the TabBar itself. TODO: get rid of magic numbers.
-    setSize(mainPageBounds.getWidth() + 3, mainPageBounds.getHeight() + getTabBarDepth() + 2);
+    setSize(firstPageBounds.getWidth() + 3, firstPageBounds.getHeight() + getTabBarDepth() + 2);
 }
 
 MainTabbedComponent::~MainTabbedComponent()
@@ -188,3 +200,42 @@ void MainTabbedComponent::StartNanoOcpClient()
     m_nanoOcp1Client->start();
 }
 
+bool MainTabbedComponent::CreatePagesFromConfigFile(juce::File& configFIle, juce::Rectangle<int>& firstPageBounds)
+{
+    if (configFIle.existsAsFile())
+    {
+        auto rootXmlElement = parseXMLIfTagMatches(configFIle, "AES70CommandSet");
+        if (rootXmlElement)
+        {
+            firstPageBounds = juce::Rectangle<int>();
+            bool atLeastOneAdded(false);
+
+            juce::String configVersion;
+            if (rootXmlElement->hasAttribute("version"))
+                configVersion = rootXmlElement->getStringAttribute("version");
+
+            auto childXmlElement = rootXmlElement->getChildByName("AES70Command");
+            while (childXmlElement)
+            {
+                juce::String pageName("Page " + juce::String(getNumTabs()));
+                if (childXmlElement->hasAttribute("name"))
+                    pageName = childXmlElement->getStringAttribute("name");
+
+                auto page = new StringGeneratorPage(this); // TODO set page's config
+                if (firstPageBounds.isEmpty())
+                    firstPageBounds = page->getBounds();
+
+                // Add one StringGeneratorPage for each AES70Command.
+                addTab(pageName, AppBackgroundColour, page, true);
+                atLeastOneAdded = true;
+
+                // Advance to next AES70Command tag.
+                childXmlElement = childXmlElement->getNextElementWithTagName("AES70Command");
+            }
+
+            return atLeastOneAdded;
+        }
+    }
+
+    return false;
+}

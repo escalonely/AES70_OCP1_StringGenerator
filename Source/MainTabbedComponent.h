@@ -84,6 +84,16 @@ protected:
      */
     void StartNanoOcpClient();
 
+    /**
+     * Read the given file, parse the XML content, and create StringGeneratorPage tabs based on the file.
+     * You may need to clear the current generator pages first.
+     * 
+     * @param[in] configFile        File containing a valid configuration as XML.
+     * @param[in] firstPageBounds   TODO explain hack
+     * @return  True if the file could be parsed and at least one StringGeneratorPage was created.
+     */
+    bool CreatePagesFromConfigFile(juce::File& configFile, juce::Rectangle<int>& firstPageBounds);
+
 
 private:
     // OCP1 Client to handle AES70 communication with device.
