@@ -98,7 +98,7 @@ static const std::vector<juce::String> GuiLabelsText = {
 // Class StringGeneratorPage
 //==============================================================================
 
-StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
+StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     :   m_parent(parent),
         m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
@@ -462,6 +462,26 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
 
 StringGeneratorPage::~StringGeneratorPage()
 {
+}
+
+StringGeneratorPage* StringGeneratorPage::CreateFromXml(const juce::XmlElement* const aes70CommandElement,
+                                                        MainTabbedComponent* const parent)
+{
+    if ((parent == nullptr) ||
+        (aes70CommandElement == nullptr) ||
+        (aes70CommandElement->getTagName() != "AES70Command"))
+        return nullptr;
+
+    juce::String pageName("Page " + juce::String(parent->getNumTabs()));
+    if (aes70CommandElement->hasAttribute("name"))
+        pageName = aes70CommandElement->getStringAttribute("name");
+
+    StringGeneratorPage* pPage = new StringGeneratorPage(parent);
+    pPage->setName(pageName);
+
+    // TODO: Set config
+
+    return pPage;
 }
 
 void StringGeneratorPage::ResetComponents(int step)
