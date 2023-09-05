@@ -99,6 +99,21 @@ protected:
      */
     bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
 
+    /**
+     * Helper method to select a given option of a ComboBox.
+     * The standard juce::ComboBox comes with methods to setSelectedId and setSelectedItemIndex, but it lacks
+     * a method to select whatever item whose text matches the specified string. This is that method.
+     *
+     * @param[in] comboBox  The juce::ComboBox whose item to select from.
+     * @param[in] itemText  The desired text which shall be selected.
+     * @param[in] notification  Sync/Async notification type which shall be used for the internal setSelectedItemIndex call. 
+     * @return  True if the selection could be made on the comboBox. 
+     *          False if no option could be found which matched the desired string.
+     */
+    static bool SelectComboBoxItemByText(juce::ComboBox& comboBox,
+                                         const juce::String& itemText, 
+                                         juce::NotificationType notification = juce::sendNotificationAsync);
+
 
 private:
     // Parent TabbedComponent which contains this page component as one or more of its tabs. 

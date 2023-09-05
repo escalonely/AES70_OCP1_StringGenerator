@@ -136,7 +136,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     m_ocaONoTextEditor.setInputRestrictions(0, "0123456789");
     m_ocaONoTextEditor.setIndents(m_ocaONoTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaONoTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ocaONoTextEditor.setText("10000", juce::dontSendNotification);
+    m_ocaONoTextEditor.setText("10000", false);
 
     m_ocaClassComboBox.setHasFocusOutline(true);
     m_ocaPropertyComboBox.setHasFocusOutline(true);
@@ -150,7 +150,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     m_ocaCommandHandleTextEditor.setInputRestrictions(0, "0123456789");
     m_ocaCommandHandleTextEditor.setIndents(m_ocaCommandHandleTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaCommandHandleTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ocaCommandHandleTextEditor.setText("1", juce::dontSendNotification);
+    m_ocaCommandHandleTextEditor.setText("1", false);
     
     m_ocaCommandTextEditor.setHasFocusOutline(true);
     m_ocaCommandTextEditor.setReadOnly(true);
@@ -209,7 +209,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
-        m_ocaClassComboBox.addItem(AES70::MapOfClassNames.at(classIdx), classIdx);
+        m_ocaClassComboBox.addItem(AES70::MapOfClassNamesInTree.at(classIdx), classIdx);
     }
     m_ocaClassComboBox.addSeparator();
     m_ocaClassComboBox.addItem("Custom", ClassIndexForCustomClass);
@@ -467,19 +467,113 @@ StringGeneratorPage::~StringGeneratorPage()
 StringGeneratorPage* StringGeneratorPage::CreateFromXml(const juce::XmlElement* const aes70CommandElement,
                                                         MainTabbedComponent* const parent)
 {
+    // Gatekeeper checks
     if ((parent == nullptr) ||
         (aes70CommandElement == nullptr) ||
         (aes70CommandElement->getTagName() != "AES70Command"))
         return nullptr;
 
+    // Create an empty page
+    StringGeneratorPage* pPage = new StringGeneratorPage(parent);
+    if (pPage == nullptr)
+        return nullptr;
+
+    // Set the new page's component name, which will be used by m_parent as its tab name.
     juce::String pageName("Page " + juce::String(parent->getNumTabs()));
     if (aes70CommandElement->hasAttribute("name"))
         pageName = aes70CommandElement->getStringAttribute("name");
-
-    StringGeneratorPage* pPage = new StringGeneratorPage(parent);
     pPage->setName(pageName);
 
-    // TODO: Set config
+    // TODO choose notif type and explain why
+    juce::NotificationType notification = juce::sendNotificationSync;
+
+    // class
+    if (aes70CommandElement->hasAttribute("class"))
+    {
+        int classIdx = AES70::OcaRoot::GetClassIdxFromName(aes70CommandElement->getStringAttribute("class"));
+        pPage->m_ocaClassComboBox.setSelectedId(classIdx, notification);
+    }
+
+    // ono
+    if (aes70CommandElement->hasAttribute("ono"))
+    {
+        int onoInt = jmax<int>(0, aes70CommandElement->getStringAttribute("ono").getIntValue());
+        pPage->m_ocaONoTextEditor.setText(juce::String(onoInt), true);
+    }
+
+    // property
+    if (aes70CommandElement->hasAttribute("property"))
+    {
+        auto propIdxAndDefLevel = aes70CommandElement->getStringAttribute("property");
+        int propDefLevel = propIdxAndDefLevel.upToFirstOccurrenceOf(",", false, true).getIntValue();
+        int propIndex = propIdxAndDefLevel.fromFirstOccurrenceOf(",", false, true).getIntValue();
+
+        bool ok = ((propDefLevel > 0) && (propDefLevel < 64) &&
+                   (propIndex > 0) && (propIndex < 64)); // TODO magic numbers
+        jassert(ok); // Property definition level or index out of bounds.
+        if (ok)
+        {
+            ok = SelectComboBoxItemByText(pPage->m_ocaPropertyComboBox, 
+                                          propIdxAndDefLevel,
+                                          notification);
+            jassert(ok);
+
+            ok = SelectComboBoxItemByText(pPage->m_ocaPropertyDefLevelComboBox, 
+                                          juce::String(propDefLevel), 
+                                          notification);
+            jassert(ok);
+        }
+    }
+
+    // type
+    if (aes70CommandElement->hasAttribute("type"))
+    {
+        // TODO: parse paramType and set m_ocaPropertyParamTypeComboBox
+    }
+
+    // command
+    if (aes70CommandElement->hasAttribute("command"))
+    {
+        auto cmdIdxAndDefLevel = aes70CommandElement->getStringAttribute("command");
+        int cmdDefLevel = cmdIdxAndDefLevel.upToFirstOccurrenceOf(",", false, true).getIntValue();
+        int cmdIndex = cmdIdxAndDefLevel.fromFirstOccurrenceOf(",", false, true).getIntValue();
+
+        bool ok = ((cmdDefLevel > 0) && (cmdDefLevel < 64) &&
+                   (cmdIndex > 0) && (cmdIndex < 64)); // TODO magic numbers
+        jassert(ok); // Command definition level or index out of bounds.
+        if (ok)
+        {
+            ok = SelectComboBoxItemByText(pPage->m_ocaCommandComboBox,
+                                          cmdIdxAndDefLevel,
+                                          notification);
+            jassert(ok);
+
+            ok = SelectComboBoxItemByText(pPage->m_ocaCommandDefLevelComboBox,
+                                          juce::String(cmdDefLevel),
+                                          notification);
+            jassert(ok);
+
+        }
+    }
+
+    // handle
+    if (aes70CommandElement->hasAttribute("handle"))
+    {
+        int handleInt = jmax<int>(1, aes70CommandElement->getStringAttribute("handle").getIntValue());
+        pPage->m_ocaCommandHandleTextEditor.setText(juce::String(handleInt), true);
+    }
+
+    // status
+    if (aes70CommandElement->hasAttribute("status"))
+    {
+        int statusInt = aes70CommandElement->getStringAttribute("status").getIntValue();
+        bool ok = ((statusInt >= 0) && (statusInt < 16 /* TODO magic number */));
+        jassert(ok); // Command definition level or index out of bounds.
+        if (ok)
+        {
+            pPage->m_ocaResponseStatusComboBox.setSelectedId(statusInt + 1, notification);
+        }
+    }
 
     return pPage;
 }
@@ -645,9 +739,9 @@ void StringGeneratorPage::UpdateBinaryStrings()
     juce::String responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
     juce::String notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
 
-    m_ocaCommandTextEditor.setText(commandString, juce::dontSendNotification);
-    m_ocaResponseTextEditor.setText(responseString, juce::dontSendNotification);
-    m_ocaNotificationTextEditor.setText(notificationString, juce::dontSendNotification);
+    m_ocaCommandTextEditor.setText(commandString, false);
+    m_ocaResponseTextEditor.setText(responseString, false);
+    m_ocaNotificationTextEditor.setText(notificationString, false);
 
     m_sendButton.setEnabled(true);
 }
@@ -869,3 +963,18 @@ void StringGeneratorPage::resized()
     return juce::Viewport::resized();
 }
 
+bool StringGeneratorPage::SelectComboBoxItemByText(juce::ComboBox& comboBox, 
+                                                   const juce::String& itemText, 
+                                                   juce::NotificationType notification)
+{
+    for (int idx(0); idx < comboBox.getNumItems(); idx++)
+    {
+        if (comboBox.getItemText(idx).startsWith(itemText))
+        {
+            comboBox.setSelectedItemIndex(idx, notification);
+            return true;
+        }
+    }
+
+    return false;
+}
