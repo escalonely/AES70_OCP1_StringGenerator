@@ -63,7 +63,7 @@ enum ClassIdx
 /**
  * Decorated names for all supported AES70 classes.
  */
-static const std::map<int, juce::String> MapOfClassNames = {
+static const std::map<int, juce::String> MapOfClassNamesInTree = {
     { OCA_ROOT,                 "OcaRoot" },
     { OCA_WORKER,               " +-OcaWorker" },
     { OCA_ACTUATOR,             " |  +-OcaActuator" },
@@ -83,6 +83,31 @@ static const std::map<int, juce::String> MapOfClassNames = {
     { OCA_LEVEL_SENSOR,         " |     +-OcaLevelSensor" },
     { OCA_AUDIO_LEVEL_SENSOR,   " |        +-OcaAudioLevelSensor" },
     { OCA_AGENT,                " +-OcaAgent" }
+};
+
+/**
+ * Simple names for all supported AES70 classes.
+ */
+static const std::map<int, juce::String> MapOfClassNames = {
+    { OCA_ROOT,                 "OcaRoot" },
+    { OCA_WORKER,               "OcaWorker" },
+    { OCA_ACTUATOR,             "OcaActuator" },
+    { OCA_SWITCH,               "OcaSwitch" },
+    { OCA_MUTE,                 "OcaMute" },
+    { OCA_GAIN,                 "OcaGain" },
+    { OCA_DELAY,                "OcaDelay" },
+    { OCA_BASIC_ACTUATOR,       "OcaBasicActuator" },
+    { OCA_STRING_ACTUATOR,      "OcaStringActuator" },
+    { OCA_INT32_ACTUATOR,       "OcaInt32Actuator" },
+    { OCA_SENSOR,               "OcaSensor" },
+    { OCA_BASIC_SENSOR,         "OcaBasicSensor" },
+    { OCA_BOOLEAN_SENSOR,       "OcaBooleanSensor" },
+    { OCA_INT32_SENSOR,         "OcaInt32Sensor" },
+    { OCA_FLOAT32_SENSOR,       "OcaFloat32Sensor" },
+    { OCA_STRING_SENSOR,        "OcaStringSensor" },
+    { OCA_LEVEL_SENSOR,         "OcaLevelSensor" },
+    { OCA_AUDIO_LEVEL_SENSOR,   "OcaAudioLevelSensor" },
+    { OCA_AGENT,                "OcaAgent" }
 };
 
 /**
@@ -119,6 +144,15 @@ struct OcaRoot
      *          is responsibility of the caller of the method.
      */
     static OcaRoot* CreateCustom();
+
+    /**
+     * Helper method to obtain the AES70 class index which matches the class' name. 
+     *
+     * @param[in] className Name of AES70 class.
+     * @return  Index of the corresponding AES70 class within the ClassIdx enum,
+     *          or zero if no such class could be found.
+     */
+    static int GetClassIdxFromName(const juce::String& className);
 
     /**
      * Definition level of the AES70 class, where OcaRoot is at level 1 and the level
