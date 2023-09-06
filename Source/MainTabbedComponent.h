@@ -48,6 +48,17 @@ public:
     ~MainTabbedComponent() override;
 
     /**
+     * Create the initial tabs and pages under this TabbedComponent. This will add one TestPage tab, 
+     * and then a number of StringGeneratorPage tabs depending on whether a config file was provided.
+     * If no config file is provided, the default page configuration will be created.
+     *
+     * @param[in] configFile    Optional file containing page configuration as XML.
+     * @return  True if the given file was used and successfully parsed.
+     *          False if just the default pages were created instead.
+     */
+    bool InitializePages(const juce::File& configFile = juce::File());
+
+    /**
      * Use m_nanoOcp1Client to send a given MemoryBlock to the connected remote device.
      * 
      * @param[in] data  MemoryBlock to send.
@@ -89,10 +100,9 @@ protected:
      * You may need to clear the current generator pages first.
      * 
      * @param[in] configFile        File containing a valid configuration as XML.
-     * @param[in] firstPageBounds   TODO explain hack
      * @return  True if the file could be parsed and at least one StringGeneratorPage was created.
      */
-    bool CreatePagesFromConfigFile(juce::File& configFile, juce::Rectangle<int>& firstPageBounds);
+    bool CreatePagesFromConfigFile(const juce::File& configFile);
 
 
 private:
