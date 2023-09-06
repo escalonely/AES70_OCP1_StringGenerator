@@ -59,6 +59,14 @@ public:
     bool InitializePages(const juce::File& configFile = juce::File());
 
     /**
+     * Create a file containing the configuration of all pages under this TabbedComponent. 
+     *
+     * @param[in] configFile    File which will be weitten with page configuration as XML.
+     * @return  True if the file could be written to.
+     */
+    bool CreateConfigFileFromPages(juce::File& configFile) const;
+
+    /**
      * Use m_nanoOcp1Client to send a given MemoryBlock to the connected remote device.
      * 
      * @param[in] data  MemoryBlock to send.
@@ -97,7 +105,6 @@ protected:
 
     /**
      * Read the given file, parse the XML content, and create StringGeneratorPage tabs based on the file.
-     * You may need to clear the current generator pages first.
      * 
      * @param[in] configFile        File containing a valid configuration as XML.
      * @return  True if the file could be parsed and at least one StringGeneratorPage was created.

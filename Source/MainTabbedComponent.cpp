@@ -75,18 +75,22 @@ bool MainTabbedComponent::InitializePages(const juce::File& configFile)
     if (!parsedConfigFromFile)
     {
         // Add one StringGeneratorPage tab per default.
-        auto firstMainPage = new StringGeneratorPage(this);
-        addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
+        auto genPage = new StringGeneratorPage(this);
+        genPage->setName("Page " + juce::String(getNumTabs()));
+        addTab(genPage->getName(), AppBackgroundColour, genPage, true);
     }
 
     // Last tab is always the "+" tab
     addTab("+", AppBackgroundColour, new juce::Component(), true);
     getTabbedButtonBar().getTabButton(getNumTabs() - 1)->onClick = [=]()
     {
-        // Clicking on the "+" tab will add a new StringGeneratorPage tab, 
-        // ensuring that the "+" tab remains as the rightmost tab.
+        // Clicking on the "+" tab will add a new StringGeneratorPage tab.
+        auto genPage = new StringGeneratorPage(this);
+        genPage->setName("Page " + juce::String(getNumTabs()));
+
+        // Ensure that the "+" tab remains as the rightmost tab.
         int newTabNumber = getNumTabs() - 1;
-        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new StringGeneratorPage(this), true, newTabNumber);
+        addTab(genPage->getName(), AppBackgroundColour, genPage, true, newTabNumber);
         setCurrentTabIndex(newTabNumber);
     };
 
@@ -238,4 +242,22 @@ bool MainTabbedComponent::CreatePagesFromConfigFile(const juce::File& configFIle
     }
 
     return false;
+}
+
+bool MainTabbedComponent::CreateConfigFileFromPages(juce::File& configFile) const
+{
+    XmlElement rootElement("AES70CommandSet");
+    rootElement.setAttribute("version", JUCEApplicationBase::getInstance()->getApplicationVersion());
+    rootElement.setAttribute("date", Time::getCurrentTime().formatted("%d.%m.%Y"));
+
+    for (int tIdx = 0; tIdx < getNumTabs(); tIdx++)
+    {
+        auto genPage = dynamic_cast<StringGeneratorPage*>(getTabContentComponent(tIdx));
+        if (genPage)
+        {
+            rootElement.addChildElement(genPage->CreateXmlElementFromPage());
+        }
+    }
+
+    return rootElement.writeTo(configFile);
 }
