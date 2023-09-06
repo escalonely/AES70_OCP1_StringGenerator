@@ -209,7 +209,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
-        m_ocaClassComboBox.addItem(AES70::MapOfClassNamesInTree.at(classIdx), classIdx);
+        m_ocaClassComboBox.addItem(AES70::MapOfClassNamesAndIds.at(classIdx), classIdx);
     }
     m_ocaClassComboBox.addSeparator();
     m_ocaClassComboBox.addItem("Custom", ClassIndexForCustomClass);

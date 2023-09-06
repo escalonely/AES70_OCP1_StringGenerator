@@ -154,15 +154,15 @@ OcaRoot* OcaRoot::CreateCustom()
 
 int OcaRoot::GetClassIdxFromName(const juce::String& className)
 {
-    auto iter = std::find_if(MapOfClassNames.begin(),
-                             MapOfClassNames.end(),
+    auto iter = std::find_if(MapOfClassNamesAndIds.begin(),
+                             MapOfClassNamesAndIds.end(),
                              [&className](const auto& p)
                              {
                                  return p.second == className;
                              });
 
-    // Given className does not exist in MapOfClassNames
-    if (iter == MapOfClassNames.end())
+    // Given className does not exist in MapOfClassNamesAndIds
+    if (iter == MapOfClassNamesAndIds.end())
         return 0;
 
     return iter->first;

@@ -41,13 +41,13 @@ enum ClassIdx
     OCA_ROOT = 1,
     OCA_WORKER,
     OCA_ACTUATOR,
-    OCA_SWITCH,
+    OCA_BASIC_ACTUATOR,
+    OCA_INT32_ACTUATOR,
+    OCA_STRING_ACTUATOR,
     OCA_MUTE,
+    OCA_SWITCH,
     OCA_GAIN,
     OCA_DELAY,
-    OCA_BASIC_ACTUATOR,
-    OCA_STRING_ACTUATOR,
-    OCA_INT32_ACTUATOR,
     OCA_SENSOR,
     OCA_BASIC_SENSOR,
     OCA_BOOLEAN_SENSOR,
@@ -61,53 +61,28 @@ enum ClassIdx
 };
 
 /**
- * Decorated names for all supported AES70 classes.
+ * Class IDs and names for all supported AES70 classes.
  */
-static const std::map<int, juce::String> MapOfClassNamesInTree = {
-    { OCA_ROOT,                 "OcaRoot" },
-    { OCA_WORKER,               " +-OcaWorker" },
-    { OCA_ACTUATOR,             " |  +-OcaActuator" },
-    { OCA_SWITCH,               " |  |  +-OcaSwitch" },
-    { OCA_MUTE,                 " |  |  +-OcaMute" },
-    { OCA_GAIN,                 " |  |  +-OcaGain" },
-    { OCA_DELAY,                " |  |  +-OcaDelay" },
-    { OCA_BASIC_ACTUATOR,       " |  |  +-OcaBasicActuator" },
-    { OCA_STRING_ACTUATOR,      " |  |     +-OcaStringActuator" },
-    { OCA_INT32_ACTUATOR,       " |  |     +-OcaInt32Actuator" },
-    { OCA_SENSOR,               " |  +-OcaSensor" },
-    { OCA_BASIC_SENSOR,         " |     +-OcaBasicSensor" },
-    { OCA_BOOLEAN_SENSOR,       " |     |  +-OcaBooleanSensor" },
-    { OCA_INT32_SENSOR,         " |     |  +-OcaInt32Sensor" },
-    { OCA_FLOAT32_SENSOR,       " |     |  +-OcaFloat32Sensor" },
-    { OCA_STRING_SENSOR,        " |     |  +-OcaStringSensor" },
-    { OCA_LEVEL_SENSOR,         " |     +-OcaLevelSensor" },
-    { OCA_AUDIO_LEVEL_SENSOR,   " |        +-OcaAudioLevelSensor" },
-    { OCA_AGENT,                " +-OcaAgent" }
-};
-
-/**
- * Simple names for all supported AES70 classes.
- */
-static const std::map<int, juce::String> MapOfClassNames = {
-    { OCA_ROOT,                 "OcaRoot" },
-    { OCA_WORKER,               "OcaWorker" },
-    { OCA_ACTUATOR,             "OcaActuator" },
-    { OCA_SWITCH,               "OcaSwitch" },
-    { OCA_MUTE,                 "OcaMute" },
-    { OCA_GAIN,                 "OcaGain" },
-    { OCA_DELAY,                "OcaDelay" },
-    { OCA_BASIC_ACTUATOR,       "OcaBasicActuator" },
-    { OCA_STRING_ACTUATOR,      "OcaStringActuator" },
-    { OCA_INT32_ACTUATOR,       "OcaInt32Actuator" },
-    { OCA_SENSOR,               "OcaSensor" },
-    { OCA_BASIC_SENSOR,         "OcaBasicSensor" },
-    { OCA_BOOLEAN_SENSOR,       "OcaBooleanSensor" },
-    { OCA_INT32_SENSOR,         "OcaInt32Sensor" },
-    { OCA_FLOAT32_SENSOR,       "OcaFloat32Sensor" },
-    { OCA_STRING_SENSOR,        "OcaStringSensor" },
-    { OCA_LEVEL_SENSOR,         "OcaLevelSensor" },
-    { OCA_AUDIO_LEVEL_SENSOR,   "OcaAudioLevelSensor" },
-    { OCA_AGENT,                "OcaAgent" }
+static const std::map<int, juce::String> MapOfClassNamesAndIds = {
+    { OCA_ROOT,                 "1: OcaRoot" },
+    { OCA_WORKER,               "1.1: OcaWorker" },
+    { OCA_ACTUATOR,             "1.1.1: OcaActuator" },
+    { OCA_BASIC_ACTUATOR,       "1.1.1.1: OcaBasicActuator" },
+    { OCA_INT32_ACTUATOR,       "1.1.1.1.4: OcaInt32Actuator" },
+    { OCA_STRING_ACTUATOR,      "1.1.1.1.12: OcaStringActuator" },
+    { OCA_MUTE,                 "1.1.1.2: OcaMute" },
+    { OCA_SWITCH,               "1.1.1.4: OcaSwitch" },
+    { OCA_GAIN,                 "1.1.1.5: OcaGain" },
+    { OCA_DELAY,                "1.1.1.7: OcaDelay" },
+    { OCA_SENSOR,               "1.1.2: OcaSensor" },
+    { OCA_BASIC_SENSOR,         "1.1.2.1: OcaBasicSensor" },
+    { OCA_BOOLEAN_SENSOR,       "1.1.2.1.1: OcaBooleanSensor" },
+    { OCA_INT32_SENSOR,         "1.1.2.1.4: OcaInt32Sensor" },
+    { OCA_FLOAT32_SENSOR,       "1.1.2.1.10: OcaFloat32Sensor" },
+    { OCA_STRING_SENSOR,        "1.1.2.1.12: OcaStringSensor" },
+    { OCA_LEVEL_SENSOR,         "1.1.2.2: OcaLevelSensor" },
+    { OCA_AUDIO_LEVEL_SENSOR,   "1.1.2.2.1: OcaAudioLevelSensor" },
+    { OCA_AGENT,                "1.2: OcaAgent" }
 };
 
 /**
