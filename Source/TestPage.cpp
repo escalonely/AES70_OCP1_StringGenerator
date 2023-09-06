@@ -62,6 +62,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
         m_ipAddressEdit(juce::TextEditor("IpAddressEdit")),
         m_ipPortEdit(juce::TextEditor("IpAddressEdit")),
         m_stateLed(juce::TextButton("StatusLed")),
+        m_saveButton(juce::TextButton("Save config to file")),
         m_incomingMessageDisplayEdit(juce::TextEditor("MessageDisplayEdit")),
         m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
 {
@@ -72,6 +73,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     addAndMakeVisible(&m_ipPortEdit);
     addAndMakeVisible(&m_stateLed);
     addAndMakeVisible(&m_incomingMessageDisplayEdit);
+    addAndMakeVisible(&m_saveButton);
 
     // Create and add all labels on the GUI
     for (int labelIdx = 0; labelIdx < LABELIDX_MAX; labelIdx++)
@@ -136,6 +138,14 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_incomingMessageDisplayEdit.setTextToShowWhenEmpty("This field will show incoming AES70 OCP.1 "
         "messages, should any arrive.",
         LabelEnabledTextColour);
+
+    m_saveButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::blue);
+    m_saveButton.onClick = [=]()
+    {
+        juce::String fileName = juce::String("Config_") + Time::getCurrentTime().formatted("%Y-%m-%d") + juce::String(".xml");
+        auto configFile = juce::File::getCurrentWorkingDirectory().getChildFile(fileName);
+        m_parent->CreateConfigFileFromPages(configFile);
+    };
 
     setSize(10, 10);
 }
@@ -224,12 +234,14 @@ void TestPage::resized()
     m_ocaLabels.at(LABELIDX_IP_STATUS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_stateLed.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
+    // Row 6
+    rowBounds = bounds.removeFromTop(controlHeight);
+    rowBounds.removeFromLeft(comboBoxWidth); // Horizontal spacer
+    //m_ocaLabels.at(LABELIDX_MESSAGE_DISPLAY)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
+    m_saveButton.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
+
     // Vertical spacer
     bounds.removeFromTop(controlHeight / 2);
-
-    // Row 6
-    //rowBounds = bounds.removeFromTop(controlHeight);
-    //m_ocaLabels.at(LABELIDX_MESSAGE_DISPLAY)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
 
     // Row 7
     rowBounds = bounds.removeFromTop(bounds.getHeight() - margin * 2);
