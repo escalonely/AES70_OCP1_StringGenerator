@@ -36,7 +36,10 @@ public:
 
     void initialise (const juce::String& /*commandLine*/) override
     {
-        m_mainWindow.reset (new MainWindow (getApplicationName()));
+        m_mainWindow.reset(new MainWindow());
+
+        // Create and initialize the tabs in the mainWindow's TabbedComponent.
+        m_mainWindow->InitializeTabbedComponent();
     }
 
     void shutdown() override
@@ -57,17 +60,17 @@ public:
         This class implements the desktop window that contains an instance of
         our MainTabbedComponent class.
     */
-    class MainWindow    : public juce::DocumentWindow
+    class MainWindow : public juce::DocumentWindow
     {
     public:
-        MainWindow (juce::String name)
-            : DocumentWindow (name,
-                              juce::Desktop::getInstance().getDefaultLookAndFeel()
-                                                          .findColour (juce::ResizableWindow::backgroundColourId),
-                              DocumentWindow::allButtons)
+        MainWindow()
+            : DocumentWindow(juce::String(),
+                             juce::Desktop::getInstance().getDefaultLookAndFeel()
+                                                         .findColour(juce::ResizableWindow::backgroundColourId),
+                             DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
-            setContentOwned (new MainTabbedComponent(), true);
+            setUsingNativeTitleBar(true);
+            setContentOwned(new MainTabbedComponent(), true);
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
@@ -84,6 +87,25 @@ public:
         {
             // This is called when the user tries to close this window. 
             JUCEApplication::getInstance()->systemRequestedQuit();
+        }
+
+        void InitializeTabbedComponent()
+        {
+            // Check if a config file was given in via the commandline.
+            juce::File configFile;
+            juce::ArgumentList argList("executable", JUCEApplicationBase::getCommandLineParameterArray());
+            if (argList.containsOption("-o"))
+                configFile = argList.getFileForOption("-o");
+
+            // Create tabs and pages (using the config file if available).
+            auto mainComponent = static_cast<MainTabbedComponent*>(getContentComponent());
+            bool parsedFile = mainComponent->InitializePages(configFile);
+
+            // Set the app window name. If successfully opened, add the name of the config file.
+            juce::String windowName(JUCEApplicationBase::getInstance()->getApplicationName());
+            if (parsedFile)
+                windowName = configFile.getFileName() + " - " + windowName;
+            setName(windowName);
         }
 
     private:
