@@ -86,10 +86,10 @@ bool MainTabbedComponent::InitializePages(const juce::File& configFile)
     {
         // Clicking on the "+" tab will add a new StringGeneratorPage tab.
         auto genPage = new StringGeneratorPage(this);
-        genPage->setName("Page " + juce::String(getNumTabs()));
+        int newTabNumber = getNumTabs() - 1;
+        genPage->setName("Page " + juce::String(newTabNumber));
 
         // Ensure that the "+" tab remains as the rightmost tab.
-        int newTabNumber = getNumTabs() - 1;
         addTab(genPage->getName(), AppBackgroundColour, genPage, true, newTabNumber);
         setCurrentTabIndex(newTabNumber);
     };
