@@ -59,6 +59,14 @@ public:
     static StringGeneratorPage* CreateFromXml(const juce::XmlElement* const aes70CommandElement,
                                               MainTabbedComponent* const parent);
 
+    /**
+     * Creates an "AES70Command" XmlElement containing this page's current configuration. 
+     *
+     * @return  Pointer to a new XmlElement object. Ownership of this pointer should be taken 
+     *          by the root XmlElement.
+     */
+    XmlElement* CreateXmlElementFromPage() const;
+    
 
     // Reimplemented from juce::Component
 

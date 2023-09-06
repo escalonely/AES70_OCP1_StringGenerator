@@ -513,15 +513,13 @@ StringGeneratorPage* StringGeneratorPage::CreateFromXml(const juce::XmlElement* 
         jassert(ok); // Property definition level or index out of bounds.
         if (ok)
         {
-            ok = SelectComboBoxItemByText(pPage->m_ocaPropertyComboBox, 
-                                          propIdxAndDefLevel,
-                                          notification);
-            jassert(ok);
+            SelectComboBoxItemByText(pPage->m_ocaPropertyComboBox, 
+                                     propIdxAndDefLevel,
+                                     notification);
 
-            ok = SelectComboBoxItemByText(pPage->m_ocaPropertyDefLevelComboBox, 
-                                          juce::String(propDefLevel), 
-                                          notification);
-            jassert(ok);
+            SelectComboBoxItemByText(pPage->m_ocaPropertyDefLevelComboBox, 
+                                     juce::String(propDefLevel), 
+                                     notification);
         }
     }
 
@@ -543,16 +541,13 @@ StringGeneratorPage* StringGeneratorPage::CreateFromXml(const juce::XmlElement* 
         jassert(ok); // Command definition level or index out of bounds.
         if (ok)
         {
-            ok = SelectComboBoxItemByText(pPage->m_ocaCommandComboBox,
-                                          cmdIdxAndDefLevel,
-                                          notification);
-            jassert(ok);
+            SelectComboBoxItemByText(pPage->m_ocaCommandComboBox,
+                                     cmdIdxAndDefLevel,
+                                     notification);
 
-            ok = SelectComboBoxItemByText(pPage->m_ocaCommandDefLevelComboBox,
-                                          juce::String(cmdDefLevel),
-                                          notification);
-            jassert(ok);
-
+            SelectComboBoxItemByText(pPage->m_ocaCommandDefLevelComboBox,
+                                     juce::String(cmdDefLevel),
+                                     notification);
         }
     }
 
@@ -576,6 +571,24 @@ StringGeneratorPage* StringGeneratorPage::CreateFromXml(const juce::XmlElement* 
     }
 
     return pPage;
+}
+
+XmlElement* StringGeneratorPage::CreateXmlElementFromPage() const
+{
+    XmlElement* element = new XmlElement("AES70Command");
+
+    element->setAttribute("name", getName());
+    element->setAttribute("class", m_ocaClassComboBox.getText());
+    element->setAttribute("ono", m_ocaONoTextEditor.getText());
+    element->setAttribute("property", m_ocaPropertyComboBox.getText());
+    element->setAttribute("propDefLevel", m_ocaPropertyDefLevelComboBox.getText());
+    element->setAttribute("type", m_ocaPropertyParamTypeComboBox.getText());
+    element->setAttribute("command", m_ocaCommandComboBox.getText());
+    element->setAttribute("cmdDefLevel", m_ocaCommandDefLevelComboBox.getText());
+    element->setAttribute("handle", m_ocaCommandHandleTextEditor.getText());
+    element->setAttribute("status", m_ocaResponseStatusComboBox.getText());
+
+    return element;
 }
 
 void StringGeneratorPage::ResetComponents(int step)
