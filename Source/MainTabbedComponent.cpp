@@ -53,6 +53,7 @@ bool MainTabbedComponent::InitializePages(const juce::File& configFile)
 {
     // First tab is always the "Test" tab
     auto testPage = new TestPage(this);
+    testPage->SetConnectionStatus(0);
     addTab(TestPageDefaultName, AppBackgroundColour, testPage, true);
     testPage->OnDeviceIpAddressChanged = [=](const juce::String& ipAddress, int ipPort)
     {
@@ -223,7 +224,7 @@ bool MainTabbedComponent::CreatePagesFromConfigFile(const juce::File& configFIle
             while (childXmlElement)
             {
                 // Create one StringGeneratorPage for each AES70Command.
-                auto page = StringGeneratorPage::CreateFromXml(childXmlElement, this);
+                auto page = StringGeneratorPage::CreatePageFromXmlElement(childXmlElement, this);
                 jassert(page != nullptr);
                 if (page != nullptr)
                 {

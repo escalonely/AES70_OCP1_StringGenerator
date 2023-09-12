@@ -56,8 +56,8 @@ public:
      * @param[in] parent                Parent component which will take ownership of this page.
      * @return  Pointer to a new StringGeneratorPage object or nullptr if the XmlElement could not be parsed.
      */    
-    static StringGeneratorPage* CreateFromXml(const juce::XmlElement* const aes70CommandElement,
-                                              MainTabbedComponent* const parent);
+    static StringGeneratorPage* CreatePageFromXmlElement(const juce::XmlElement* const aes70CommandElement,
+                                                         MainTabbedComponent* const parent);
 
     /**
      * Creates an "AES70Command" XmlElement containing this page's current configuration. 
@@ -122,6 +122,27 @@ protected:
                                          const juce::String& itemText, 
                                          juce::NotificationType notification = juce::sendNotificationAsync);
 
+    /**
+     * Helper method to get the value currently held by a Component (regardless of type, whether it is a
+     * Slider, ComboBox, or TextEditor) and return it as a string.
+     *
+     * @param[in] component Component to get the value from.
+     * @return  The Component's current value as a string.
+     */
+    static juce::String GetComponentValueAsString(const juce::Component* const component);
+
+    /**
+     * Helper method to set the value of a Component (regardless of type, whether it is a
+     * Slider, ComboBox, or TextEditor) based on a given string.
+     *
+     * @param[in] component     Component to set the value to.
+     * @param[in] valueString   The desired new value for the Component as a string.
+     * @param[in] notification  Sync/Async notification type which shall be used for the internal setX call.
+     * @return  True if the value could be set successfully.
+     */
+    static bool SetComponentValueFromString(juce::Component* const component,
+                                            const juce::String& valueString,
+                                            juce::NotificationType notification = juce::sendNotificationAsync);
 
 private:
     // Parent TabbedComponent which contains this page component as one or more of its tabs. 
