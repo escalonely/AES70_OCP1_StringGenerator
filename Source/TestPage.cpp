@@ -139,7 +139,8 @@ TestPage::TestPage(MainTabbedComponent* parent)
         "messages, should any arrive.",
         LabelEnabledTextColour);
 
-    m_saveButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::blue);
+    m_saveButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
+    m_saveButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_saveButton.onClick = [=]()
     {
         juce::String fileName = juce::String("Config_") + Time::getCurrentTime().formatted("%Y-%m-%d") + juce::String(".xml");

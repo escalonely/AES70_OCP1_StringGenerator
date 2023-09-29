@@ -162,6 +162,8 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
 
     m_sendButton.setButtonText("Test");
     m_sendButton.setHasFocusOutline(true);
+    m_sendButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
+    m_sendButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_sendButton.setTooltip("Test by transmitting the string to the device."); // TODO: tooltips don't work
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
