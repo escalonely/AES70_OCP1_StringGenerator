@@ -60,12 +60,14 @@ bool MainTabbedComponent::LoadFileViaDialog()
     m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
         {
             juce::File configFile = chooser.getResult();
+            if (configFile != juce::File())
+            {
+                // First need to remove all current tabs.
+                clearTabs();
 
-            // First need to remove all current tabs.
-            clearTabs();
-
-            // Create tabs on a blank slate, based on the contents of the file.
-            InitializePages(configFile);
+                // Create tabs on a blank slate, based on the contents of the file.
+                InitializePages(configFile);
+            }
         });
 
     return true;
