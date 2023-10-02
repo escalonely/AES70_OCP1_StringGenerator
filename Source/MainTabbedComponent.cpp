@@ -49,6 +49,28 @@ MainTabbedComponent::~MainTabbedComponent()
 {
 }
 
+bool MainTabbedComponent::LoadFileViaDialog()
+{
+    m_fileChooser.reset(new juce::FileChooser("Select config file to LOAD...", 
+                                              File::getCurrentWorkingDirectory(), 
+                                              "*.xml",
+                                              false /* use native */));
+
+    auto fileChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+    m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
+        {
+            juce::File configFile = chooser.getResult();
+
+            // First need to remove all current tabs.
+            clearTabs();
+
+            // Create tabs on a blank slate, based on the contents of the file.
+            InitializePages(configFile);
+        });
+
+    return true;
+}
+
 bool MainTabbedComponent::InitializePages(const juce::File& configFile)
 {
     // First tab is always the "Test" tab

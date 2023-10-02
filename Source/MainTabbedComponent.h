@@ -48,6 +48,12 @@ public:
     ~MainTabbedComponent() override;
 
     /**
+     * Opens a dialog window to select a config file to load.
+     * This clears all current tabs, and creates new tabs based on the selected config file.
+     */
+    bool LoadFileViaDialog();
+
+    /**
      * Create the initial tabs and pages under this TabbedComponent. This will add one TestPage tab, 
      * and then a number of StringGeneratorPage tabs depending on whether a config file was provided.
      * If no config file is provided, the default page configuration will be created.
@@ -113,14 +119,22 @@ protected:
 
 
 private:
-    // OCP1 Client to handle AES70 communication with device.
-    // TODO: why unique_ptr? Just put on the stack.
+    /**
+     * OCP1 Client to handle AES70 communication with device.
+     * TODO: why unique_ptr? Just put on the stack.
+     */
     std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
 
-    // Number of messages that have been passed to the TestPage for displaying
-    // since the last time that the TestPage has been the active tab (See currentTabChanged).
+    /**
+     * Number of messages that have been passed to the TestPage for displaying
+     * since the last time that the TestPage has been the active tab (See currentTabChanged).
+     */
     int m_numUnreadMessages;
 
+    /**
+     * File open dialog.
+     */
+    std::unique_ptr<juce::FileChooser> m_fileChooser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainTabbedComponent)
 };
