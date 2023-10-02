@@ -54,6 +54,12 @@ public:
     bool LoadFileViaDialog();
 
     /**
+     * Opens a dialog window to select a config file to save current configuration to.
+     * This calls CreateConfigFileFromPages internally and then writes the result to the selected file.
+     */
+    bool SaveFileViaDialog();
+
+    /**
      * Create the initial tabs and pages under this TabbedComponent. This will add one TestPage tab, 
      * and then a number of StringGeneratorPage tabs depending on whether a config file was provided.
      * If no config file is provided, the default page configuration will be created.

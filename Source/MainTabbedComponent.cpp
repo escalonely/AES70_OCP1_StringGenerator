@@ -71,6 +71,28 @@ bool MainTabbedComponent::LoadFileViaDialog()
     return true;
 }
 
+bool MainTabbedComponent::SaveFileViaDialog()
+{
+    m_fileChooser.reset(new juce::FileChooser("Select config file to SAVE to...",
+        File::getCurrentWorkingDirectory(),
+        "*.xml",
+        false /* use native */));
+
+    auto fileChooserFlags = juce::FileBrowserComponent::saveMode | 
+                            juce::FileBrowserComponent::canSelectFiles | 
+                            juce::FileBrowserComponent::warnAboutOverwriting;
+    m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
+        {
+            juce::File configFile = chooser.getResult();
+            if (configFile != juce::File())
+            {
+                CreateConfigFileFromPages(configFile);
+            }
+        });
+
+    return true;
+}
+
 bool MainTabbedComponent::InitializePages(const juce::File& configFile)
 {
     // First tab is always the "Test" tab

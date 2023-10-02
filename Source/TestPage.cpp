@@ -141,6 +141,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
         "messages, should any arrive.",
         LabelEnabledTextColour);
 
+    m_loadButton.setClickingTogglesState(false);
     m_loadButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
     m_loadButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_loadButton.onClick = [=]()
@@ -148,14 +149,13 @@ TestPage::TestPage(MainTabbedComponent* parent)
             m_parent->LoadFileViaDialog();
         };
 
+    m_saveButton.setClickingTogglesState(false);
     m_saveButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
     m_saveButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_saveButton.onClick = [=]()
-    {
-        juce::String fileName = juce::String("Config_") + Time::getCurrentTime().formatted("%Y-%m-%d") + juce::String(".xml");
-        auto configFile = juce::File::getCurrentWorkingDirectory().getChildFile(fileName);
-        m_parent->CreateConfigFileFromPages(configFile);
-    };
+        {
+            m_parent->SaveFileViaDialog();
+        };
 
     setSize(10, 10);
 }
