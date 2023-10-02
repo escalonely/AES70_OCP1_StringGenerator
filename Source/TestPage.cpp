@@ -62,6 +62,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
         m_ipAddressEdit(juce::TextEditor("IpAddressEdit")),
         m_ipPortEdit(juce::TextEditor("IpAddressEdit")),
         m_stateLed(juce::TextButton("StatusLed")),
+        m_loadButton(juce::TextButton("Load config from file")),
         m_saveButton(juce::TextButton("Save config to file")),
         m_incomingMessageDisplayEdit(juce::TextEditor("MessageDisplayEdit")),
         m_hyperlink(juce::HyperlinkButton(ProjectHostShortURL, juce::URL(ProjectHostLongURL)))
@@ -73,6 +74,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     addAndMakeVisible(&m_ipPortEdit);
     addAndMakeVisible(&m_stateLed);
     addAndMakeVisible(&m_incomingMessageDisplayEdit);
+    addAndMakeVisible(&m_loadButton);
     addAndMakeVisible(&m_saveButton);
 
     // Create and add all labels on the GUI
@@ -138,6 +140,13 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_incomingMessageDisplayEdit.setTextToShowWhenEmpty("This field will show incoming AES70 OCP.1 "
         "messages, should any arrive.",
         LabelEnabledTextColour);
+
+    m_loadButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
+    m_loadButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
+    m_loadButton.onClick = [=]()
+        {
+            m_parent->LoadFileViaDialog();
+        };
 
     m_saveButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
     m_saveButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
@@ -228,18 +237,21 @@ void TestPage::resized()
 
     // Row 2
     rowBounds = bounds.removeFromTop(controlHeight);
+    rowBounds.removeFromLeft(comboBoxWidth); // Horizontal spacer
+    m_saveButton.setBounds(rowBounds.removeFromRight(comboBoxWidth * 2).reduced(margin));
+    m_loadButton.setBounds(rowBounds.removeFromRight(comboBoxWidth * 2).reduced(margin));
+
+    // Vertical spacer
+    bounds.removeFromTop(controlHeight / 2);
+
+    // Row 3
+    rowBounds = bounds.removeFromTop(controlHeight);
     m_ocaLabels.at(LABELIDX_IP_ADDRESS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ipAddressEdit.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
     m_ocaLabels.at(LABELIDX_IP_PORT)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ipPortEdit.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_ocaLabels.at(LABELIDX_IP_STATUS)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
     m_stateLed.setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-
-    // Row 6
-    rowBounds = bounds.removeFromTop(controlHeight);
-    rowBounds.removeFromLeft(comboBoxWidth); // Horizontal spacer
-    //m_ocaLabels.at(LABELIDX_MESSAGE_DISPLAY)->setBounds(rowBounds.removeFromLeft(comboBoxWidth).reduced(margin));
-    m_saveButton.setBounds(rowBounds.removeFromLeft(comboBoxWidth * 2).reduced(margin));
 
     // Vertical spacer
     bounds.removeFromTop(controlHeight / 2);

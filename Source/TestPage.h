@@ -102,6 +102,9 @@ private:
     // Placeholder button for saving the current page configuration
     juce::TextButton m_saveButton;
 
+    // Placeholder button for loading a previously saved page configuration
+    juce::TextButton m_loadButton;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestPage)
 };
