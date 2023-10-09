@@ -48,6 +48,37 @@ public:
     ~MainTabbedComponent() override;
 
     /**
+     * Opens a dialog window to select a config file to load.
+     * This clears all current tabs, and creates new tabs based on the selected config file.
+     */
+    bool LoadFileViaDialog();
+
+    /**
+     * Opens a dialog window to select a config file to save current configuration to.
+     * This calls CreateConfigFileFromPages internally and then writes the result to the selected file.
+     */
+    bool SaveFileViaDialog();
+
+    /**
+     * Create the initial tabs and pages under this TabbedComponent. This will add one TestPage tab, 
+     * and then a number of StringGeneratorPage tabs depending on whether a config file was provided.
+     * If no config file is provided, the default page configuration will be created.
+     *
+     * @param[in] configFile    Optional file containing page configuration as XML.
+     * @return  True if the given file was used and successfully parsed.
+     *          False if just the default pages were created instead.
+     */
+    bool InitializePages(const juce::File& configFile = juce::File());
+
+    /**
+     * Create a file containing the configuration of all pages under this TabbedComponent. 
+     *
+     * @param[in] configFile    File which will be weitten with page configuration as XML.
+     * @return  True if the file could be written to.
+     */
+    bool CreateConfigFileFromPages(juce::File& configFile) const;
+
+    /**
      * Use m_nanoOcp1Client to send a given MemoryBlock to the connected remote device.
      * 
      * @param[in] data  MemoryBlock to send.
@@ -84,16 +115,32 @@ protected:
      */
     void StartNanoOcpClient();
 
+    /**
+     * Read the given file, parse the XML content, and create StringGeneratorPage tabs based on the file.
+     * 
+     * @param[in] configFile        File containing a valid configuration as XML.
+     * @return  True if the file could be parsed and at least one StringGeneratorPage was created.
+     */
+    bool CreatePagesFromConfigFile(const juce::File& configFile);
+
 
 private:
-    // OCP1 Client to handle AES70 communication with device.
-    // TODO: why unique_ptr? Just put on the stack.
+    /**
+     * OCP1 Client to handle AES70 communication with device.
+     * TODO: why unique_ptr? Just put on the stack.
+     */
     std::unique_ptr<NanoOcp1::NanoOcp1Client> m_nanoOcp1Client;
 
-    // Number of messages that have been passed to the TestPage for displaying
-    // since the last time that the TestPage has been the active tab (See currentTabChanged).
+    /**
+     * Number of messages that have been passed to the TestPage for displaying
+     * since the last time that the TestPage has been the active tab (See currentTabChanged).
+     */
     int m_numUnreadMessages;
 
+    /**
+     * File open dialog.
+     */
+    std::unique_ptr<juce::FileChooser> m_fileChooser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainTabbedComponent)
 };

@@ -152,6 +152,22 @@ OcaRoot* OcaRoot::CreateCustom()
     return new OcaCustomClass();
 }
 
+int OcaRoot::GetClassIdxFromName(const juce::String& className)
+{
+    auto iter = std::find_if(MapOfClassNamesAndIds.begin(),
+                             MapOfClassNamesAndIds.end(),
+                             [&className](const auto& p)
+                             {
+                                 return p.second == className;
+                             });
+
+    // Given className does not exist in MapOfClassNamesAndIds
+    if (iter == MapOfClassNamesAndIds.end())
+        return 0;
+
+    return iter->first;
+}
+
 
 //==============================================================================
 // Class OcaWorker

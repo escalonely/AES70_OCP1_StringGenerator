@@ -45,8 +45,28 @@ namespace AES70
 class StringGeneratorPage : public juce::Viewport
 {
 public:
-    StringGeneratorPage(MainTabbedComponent* parent);
+    StringGeneratorPage(MainTabbedComponent* const parent);
     ~StringGeneratorPage() override;
+
+    /**
+     * Factory method used to create a new StringGeneratorPage based on the "AES70Command"
+     * element of an XML configuration file.
+     *
+     * @param[in] aes70CommandElement   AES70Command XML node containing the attributes to be applied to the page.
+     * @param[in] parent                Parent component which will take ownership of this page.
+     * @return  Pointer to a new StringGeneratorPage object or nullptr if the XmlElement could not be parsed.
+     */    
+    static StringGeneratorPage* CreatePageFromXmlElement(const juce::XmlElement* const aes70CommandElement,
+                                                         MainTabbedComponent* const parent);
+
+    /**
+     * Creates an "AES70Command" XmlElement containing this page's current configuration. 
+     *
+     * @return  Pointer to a new XmlElement object. Ownership of this pointer should be taken 
+     *          by the root XmlElement.
+     */
+    XmlElement* CreateXmlElementFromPage() const;
+    
 
     // Reimplemented from juce::Component
 
@@ -57,7 +77,9 @@ public:
 protected:
     /**
      * Reset GUI components.
+     * 
      * @param[in] step  Determines which GUI controls are reset. 
+     *                  The lower the (workflow) step, the more controls are reset.
      */
     void ResetComponents(int step);
 
@@ -85,6 +107,42 @@ protected:
      */
     bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
 
+    /**
+     * Helper method to select a given option of a ComboBox.
+     * The standard juce::ComboBox comes with methods to setSelectedId and setSelectedItemIndex, but it lacks
+     * a method to select whatever item whose text matches the specified string. This is that method.
+     *
+     * @param[in] comboBox  The juce::ComboBox whose item to select from.
+     * @param[in] itemText  The desired text which shall be selected.
+     * @param[in] notification  Sync/Async notification type which shall be used for the internal setSelectedItemIndex call. 
+     * @return  True if the selection could be made on the comboBox. 
+     *          False if no option could be found which matched the desired string.
+     */
+    static bool SelectComboBoxItemByText(juce::ComboBox& comboBox,
+                                         const juce::String& itemText, 
+                                         juce::NotificationType notification = juce::sendNotificationAsync);
+
+    /**
+     * Helper method to get the value currently held by a Component (regardless of type, whether it is a
+     * Slider, ComboBox, or TextEditor) and return it as a string.
+     *
+     * @param[in] component Component to get the value from.
+     * @return  The Component's current value as a string.
+     */
+    static juce::String GetComponentValueAsString(const juce::Component* const component);
+
+    /**
+     * Helper method to set the value of a Component (regardless of type, whether it is a
+     * Slider, ComboBox, or TextEditor) based on a given string.
+     *
+     * @param[in] component     Component to set the value to.
+     * @param[in] valueString   The desired new value for the Component as a string.
+     * @param[in] notification  Sync/Async notification type which shall be used for the internal setX call.
+     * @return  True if the value could be set successfully.
+     */
+    static bool SetComponentValueFromString(juce::Component* const component,
+                                            const juce::String& valueString,
+                                            juce::NotificationType notification = juce::sendNotificationAsync);
 
 private:
     // Parent TabbedComponent which contains this page component as one or more of its tabs. 

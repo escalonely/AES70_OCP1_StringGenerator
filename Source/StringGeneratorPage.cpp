@@ -77,7 +77,7 @@ enum GuiLabels
  * Text content for all juce::Label components used on the GUI.
  */
 static const std::vector<juce::String> GuiLabelsText = {
-    /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
+    /* LABELIDX_TITLE              */ "AES70 OCP.1 PDU generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
     /* LABELIDX_CLASS,             */ "Class:",
     /* LABELIDX_ONO,               */ "ONo:",
     /* LABELIDX_PROP,              */ "Property:",
@@ -98,7 +98,7 @@ static const std::vector<juce::String> GuiLabelsText = {
 // Class StringGeneratorPage
 //==============================================================================
 
-StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
+StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     :   m_parent(parent),
         m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
@@ -136,7 +136,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
     m_ocaONoTextEditor.setInputRestrictions(0, "0123456789");
     m_ocaONoTextEditor.setIndents(m_ocaONoTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaONoTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ocaONoTextEditor.setText("10000", juce::dontSendNotification);
+    m_ocaONoTextEditor.setText("10000", false);
 
     m_ocaClassComboBox.setHasFocusOutline(true);
     m_ocaPropertyComboBox.setHasFocusOutline(true);
@@ -150,7 +150,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
     m_ocaCommandHandleTextEditor.setInputRestrictions(0, "0123456789");
     m_ocaCommandHandleTextEditor.setIndents(m_ocaCommandHandleTextEditor.getLeftIndent(), 0); // Hack for JUCE justification bug
     m_ocaCommandHandleTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
-    m_ocaCommandHandleTextEditor.setText("1", juce::dontSendNotification);
+    m_ocaCommandHandleTextEditor.setText("1", false);
     
     m_ocaCommandTextEditor.setHasFocusOutline(true);
     m_ocaCommandTextEditor.setReadOnly(true);
@@ -162,6 +162,8 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
 
     m_sendButton.setButtonText("Test");
     m_sendButton.setHasFocusOutline(true);
+    m_sendButton.setColour(juce::TextButton::ColourIds::buttonColourId, ButtonBackgroundColour);
+    m_sendButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_sendButton.setTooltip("Test by transmitting the string to the device."); // TODO: tooltips don't work
 
     m_ocaResponseTextEditor.setHasFocusOutline(true);
@@ -209,7 +211,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
 
     for (int classIdx = AES70::OCA_ROOT; classIdx < AES70::OCA_MAX_CLASS_IDX; classIdx++)
     {
-        m_ocaClassComboBox.addItem(AES70::MapOfClassNames.at(classIdx), classIdx);
+        m_ocaClassComboBox.addItem(AES70::MapOfClassNamesAndIds.at(classIdx), classIdx);
     }
     m_ocaClassComboBox.addSeparator();
     m_ocaClassComboBox.addItem("Custom", ClassIndexForCustomClass);
@@ -419,6 +421,8 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
             else
             {
                 m_ocaNotificationTextEditor.setVisible(true);
+                m_ocaCommandDefLevelComboBox.addItem("-", 1);
+                m_ocaCommandDefLevelComboBox.setSelectedId(1, juce::dontSendNotification);
             }
 
             CreateValueComponents();
@@ -462,6 +466,159 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* parent)
 
 StringGeneratorPage::~StringGeneratorPage()
 {
+}
+
+StringGeneratorPage* StringGeneratorPage::CreatePageFromXmlElement(const juce::XmlElement* const aes70CommandElement,
+                                                                   MainTabbedComponent* const parent)
+{
+    // Gatekeeper checks
+    if ((parent == nullptr) ||
+        (aes70CommandElement == nullptr) ||
+        (aes70CommandElement->getTagName() != "AES70Command"))
+        return nullptr;
+
+    // Create an empty page
+    StringGeneratorPage* pPage = new StringGeneratorPage(parent);
+    if (pPage == nullptr)
+        return nullptr;
+
+    // Set the new page's component name, which will be used by m_parent as its tab name.
+    juce::String pageName("Page " + juce::String(parent->getNumTabs()));
+    if (aes70CommandElement->hasAttribute("name"))
+        pageName = aes70CommandElement->getStringAttribute("name");
+    pPage->setName(pageName);
+
+    // Simulating the user's workflow, we set component values synchronously to ensure that items are added
+    // to the ComboBoxes BEFORE the value of those ComboBoxes are set programatically.
+    juce::NotificationType notification = juce::sendNotificationSync;
+
+    // class
+    if (aes70CommandElement->hasAttribute("class"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaClassComboBox,
+                                 aes70CommandElement->getStringAttribute("class"),
+                                 notification);
+    }
+
+    // ono
+    if (aes70CommandElement->hasAttribute("ono"))
+    {
+        int onoInt = jmax<int>(0, aes70CommandElement->getStringAttribute("ono").getIntValue());
+        pPage->m_ocaONoTextEditor.setText(juce::String(onoInt), true);
+    }
+
+    // property
+    if (aes70CommandElement->hasAttribute("property"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaPropertyComboBox,
+                                 aes70CommandElement->getStringAttribute("property"),
+                                 notification);
+    }
+
+    // propDefLevel
+    if (aes70CommandElement->hasAttribute("propDefLevel"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaPropertyDefLevelComboBox,
+                                 aes70CommandElement->getStringAttribute("propDefLevel"),
+                                 notification);
+    }
+
+    // type
+    if (aes70CommandElement->hasAttribute("type"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaPropertyParamTypeComboBox,
+                                 aes70CommandElement->getStringAttribute("type"),
+                                 notification);
+    }
+
+    // command
+    if (aes70CommandElement->hasAttribute("command"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaCommandComboBox,
+                                 aes70CommandElement->getStringAttribute("command"),
+                                 notification);
+    }
+
+    // cmdDefLevel
+    if (aes70CommandElement->hasAttribute("cmdDefLevel"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaCommandDefLevelComboBox,
+                                 aes70CommandElement->getStringAttribute("cmdDefLevel"),
+                                 notification);
+    }
+
+    // handle
+    if (aes70CommandElement->hasAttribute("handle"))
+    {
+        int handleInt = jmax<int>(1, aes70CommandElement->getStringAttribute("handle").getIntValue());
+        pPage->m_ocaCommandHandleTextEditor.setText(juce::String(handleInt), true);
+    }
+
+    // status
+    if (aes70CommandElement->hasAttribute("status"))
+    {
+        SelectComboBoxItemByText(pPage->m_ocaResponseStatusComboBox,
+                                 aes70CommandElement->getStringAttribute("status"),
+                                 notification);
+    }
+
+    // cmdValue
+    if (aes70CommandElement->hasAttribute("cmdValue"))
+    {
+        SetComponentValueFromString(pPage->m_ocaSetCommandValueComponent.get(),
+                                    aes70CommandElement->getStringAttribute("cmdValue"),
+                                    notification);
+    }
+
+    // rspValue
+    if (aes70CommandElement->hasAttribute("rspValue"))
+    {
+        SetComponentValueFromString(pPage->m_ocaResponseValueComponent.get(),
+                                    aes70CommandElement->getStringAttribute("rspValue"),
+                                    notification);
+    }
+
+    // notifValue
+    if (aes70CommandElement->hasAttribute("notifValue"))
+    {
+        SetComponentValueFromString(pPage->m_ocaNotificationValueComponent.get(),
+                                    aes70CommandElement->getStringAttribute("notifValue"),
+                                    notification);
+    }
+
+    return pPage;
+}
+
+XmlElement* StringGeneratorPage::CreateXmlElementFromPage() const
+{
+    XmlElement* element = new XmlElement("AES70Command");
+
+    element->setAttribute("name", getName());
+    element->setAttribute("class", m_ocaClassComboBox.getText());
+    element->setAttribute("ono", m_ocaONoTextEditor.getText());
+    element->setAttribute("property", m_ocaPropertyComboBox.getText());
+    element->setAttribute("propDefLevel", m_ocaPropertyDefLevelComboBox.getText());
+    element->setAttribute("type", m_ocaPropertyParamTypeComboBox.getText());
+    element->setAttribute("command", m_ocaCommandComboBox.getText());
+    element->setAttribute("cmdDefLevel", m_ocaCommandDefLevelComboBox.getText());
+    element->setAttribute("handle", m_ocaCommandHandleTextEditor.getText());
+    element->setAttribute("status", m_ocaResponseStatusComboBox.getText());
+
+    // Add cmdValue, rspValue or notifValue attributes depending on which components are available.
+    if (m_ocaSetCommandValueComponent)
+    {
+        element->setAttribute("cmdValue", GetComponentValueAsString(m_ocaSetCommandValueComponent.get()));
+    }
+    if (m_ocaResponseValueComponent)
+    {
+        element->setAttribute("rspValue", GetComponentValueAsString(m_ocaResponseValueComponent.get()));
+    }
+    if (m_ocaNotificationValueComponent)
+    {
+        element->setAttribute("notifValue", GetComponentValueAsString(m_ocaNotificationValueComponent.get()));
+    }
+
+    return element;
 }
 
 void StringGeneratorPage::ResetComponents(int step)
@@ -625,9 +782,9 @@ void StringGeneratorPage::UpdateBinaryStrings()
     juce::String responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
     juce::String notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
 
-    m_ocaCommandTextEditor.setText(commandString, juce::dontSendNotification);
-    m_ocaResponseTextEditor.setText(responseString, juce::dontSendNotification);
-    m_ocaNotificationTextEditor.setText(notificationString, juce::dontSendNotification);
+    m_ocaCommandTextEditor.setText(commandString, false);
+    m_ocaResponseTextEditor.setText(responseString, false);
+    m_ocaNotificationTextEditor.setText(notificationString, false);
 
     m_sendButton.setEnabled(true);
 }
@@ -849,3 +1006,77 @@ void StringGeneratorPage::resized()
     return juce::Viewport::resized();
 }
 
+bool StringGeneratorPage::SelectComboBoxItemByText(juce::ComboBox& comboBox, 
+                                                   const juce::String& itemText, 
+                                                   juce::NotificationType notification)
+{
+    for (int idx(0); idx < comboBox.getNumItems(); idx++)
+    {
+        if (comboBox.getItemText(idx).startsWith(itemText))
+        {
+            comboBox.setSelectedItemIndex(idx, notification);
+            return true;
+        }
+    }
+
+    jassertfalse; // ComboBox has no option matching itemText!
+    return false;
+}
+
+juce::String StringGeneratorPage::GetComponentValueAsString(const juce::Component* const component)
+{
+    if (component == nullptr)
+        return juce::String();
+
+    auto combo = dynamic_cast<const juce::ComboBox*>(component);
+    if (combo)
+    {
+        return combo->getText();
+    }
+
+    auto slider = dynamic_cast<const juce::Slider*>(component);
+    if (slider)
+    {
+        return juce::String(slider->getValue());
+    }
+
+    auto editor = dynamic_cast<const juce::TextEditor*>(component);
+    if (editor)
+    {
+        return editor->getText();
+    }
+
+    jassertfalse; // Missing implementation for component type!
+    return juce::String();
+}
+
+bool StringGeneratorPage::SetComponentValueFromString(juce::Component* const component, 
+                                                      const juce::String& valueString,
+                                                      juce::NotificationType notification)
+{
+    if (component == nullptr)
+        return false;
+
+    auto combo = dynamic_cast<juce::ComboBox*>(component);
+    if (combo)
+    {
+        return SelectComboBoxItemByText(*combo, valueString, notification);
+    }
+
+    auto slider = dynamic_cast<juce::Slider*>(component);
+    if (slider)
+    {
+        slider->setValue(valueString.getDoubleValue(), notification);
+        return true;
+    }
+
+    auto editor = dynamic_cast<juce::TextEditor*>(component);
+    if (editor)
+    {
+        editor->setText(valueString, notification);
+        return true;
+    }
+
+    jassertfalse; // Missing implementation for component type!
+    return false;
+}

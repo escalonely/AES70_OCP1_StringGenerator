@@ -1,12 +1,14 @@
+![TitleBar.png](Resources/Documentation/TitleBar.png "0x3b")
+
 # AES70 OCP.1 Binary String Generator
 
 The AES70 OCP.1 binary string generator is a privately created and driven project.
 
 ## Description
 
-- This is a small tool that can generate AES70/OCA binary strings for TCP-network-based control (OCP.1).
-- The strings are generated quickly and on the fly after adjusting only a handful of parameters.
-- The resulting strings can be used by integrators, e.g. by copy-pasting them into a script, for controlling and monitoring AES70-capable devices.
+- This is a small tool that can generate AES70/OCA protocol data units (PDUs) for TCP-network-based control (OCP.1).
+- The PDUs are generated quickly and on the fly after adjusting only a handful of parameters.
+- The resulting PDUs can be used by integrators, e.g. by copy-pasting them into a script, for controlling and monitoring AES70-capable devices.
 
 For more info in AES70 and/or OCA, visit https://ocaalliance.com/what-is-aes70/
 

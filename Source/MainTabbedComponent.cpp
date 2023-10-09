@@ -40,8 +40,66 @@ MainTabbedComponent::MainTabbedComponent()
     // Initialize the NanoOcp1::NanoOcp1Client m_nanoOcp1Client. 
     StartNanoOcpClient();
 
+    // Resize the MainTabbedComponent taking into account the height of the TabBar itself. 
+    // TODO: get rid of magic numbers.
+    setSize(AppWindowDefaultWidth + 3, AppWindowDefaultHeight + getTabBarDepth() + 2);
+}
+
+MainTabbedComponent::~MainTabbedComponent()
+{
+}
+
+bool MainTabbedComponent::LoadFileViaDialog()
+{
+    m_fileChooser.reset(new juce::FileChooser("Select config file to LOAD...", 
+                                              File::getCurrentWorkingDirectory(), 
+                                              "*.xml",
+                                              true /* use native */));
+
+    auto fileChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+    m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
+        {
+            juce::File configFile = chooser.getResult();
+            if (configFile != juce::File())
+            {
+                // First need to remove all current tabs.
+                clearTabs();
+
+                // Create tabs on a blank slate, based on the contents of the file.
+                InitializePages(configFile);
+            }
+        });
+
+    return true;
+}
+
+bool MainTabbedComponent::SaveFileViaDialog()
+{
+    m_fileChooser.reset(new juce::FileChooser("Select config file to SAVE to...",
+                                              File::getCurrentWorkingDirectory(),
+                                              "*.xml",
+                                              true /* use native */));
+
+    auto fileChooserFlags = juce::FileBrowserComponent::saveMode | 
+                            juce::FileBrowserComponent::canSelectFiles | 
+                            juce::FileBrowserComponent::warnAboutOverwriting;
+    m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
+        {
+            juce::File configFile = chooser.getResult();
+            if (configFile != juce::File())
+            {
+                CreateConfigFileFromPages(configFile);
+            }
+        });
+
+    return true;
+}
+
+bool MainTabbedComponent::InitializePages(const juce::File& configFile)
+{
     // First tab is always the "Test" tab
     auto testPage = new TestPage(this);
+    testPage->SetConnectionStatus(0);
     addTab(TestPageDefaultName, AppBackgroundColour, testPage, true);
     testPage->OnDeviceIpAddressChanged = [=](const juce::String& ipAddress, int ipPort)
     {
@@ -54,35 +112,39 @@ MainTabbedComponent::MainTabbedComponent()
         }
     };
 
-    // TODO: load tabs from config file
+    // Attempt to load tabs and pages from the passed config file.
+    bool parsedConfigFromFile(false);
+    if (configFile.getFullPathName().isNotEmpty())
+    {
+        parsedConfigFromFile = CreatePagesFromConfigFile(configFile);
+    }
 
-    // Add one StringGeneratorPage tab per default.
-    auto firstMainPage = new StringGeneratorPage(this);
-    auto mainPageBounds = firstMainPage->getBounds();
-    addTab("Page " + juce::String(getNumTabs()), AppBackgroundColour, firstMainPage, true);
+    if (!parsedConfigFromFile)
+    {
+        // Add one StringGeneratorPage tab per default.
+        auto genPage = new StringGeneratorPage(this);
+        genPage->setName("Page " + juce::String(getNumTabs()));
+        addTab(genPage->getName(), AppBackgroundColour, genPage, true);
+    }
 
     // Last tab is always the "+" tab
     addTab("+", AppBackgroundColour, new juce::Component(), true);
     getTabbedButtonBar().getTabButton(getNumTabs() - 1)->onClick = [=]()
     {
-        // Clicking on the "+" tab will add a new StringGeneratorPage tab, 
-        // ensuring that the "+" tab remains as the rightmost tab.
+        // Clicking on the "+" tab will add a new StringGeneratorPage tab.
+        auto genPage = new StringGeneratorPage(this);
         int newTabNumber = getNumTabs() - 1;
-        addTab("Page " + juce::String(newTabNumber), AppBackgroundColour, new StringGeneratorPage(this), true, newTabNumber);
+        genPage->setName("Page " + juce::String(newTabNumber));
+
+        // Ensure that the "+" tab remains as the rightmost tab.
+        addTab(genPage->getName(), AppBackgroundColour, genPage, true, newTabNumber);
         setCurrentTabIndex(newTabNumber);
     };
 
     // Set the first StringGeneratorPage tab as the active one per default
     setCurrentTabIndex(1);
 
-    // Resize the MainTabbedComponent based on the size of a StringGeneratorPage component,
-    // taking into account the height of the TabBar itself. TODO: get rid of magic numbers.
-    setSize(mainPageBounds.getWidth() + 3, mainPageBounds.getHeight() + getTabBarDepth() + 2);
-}
-
-MainTabbedComponent::~MainTabbedComponent()
-{
-
+    return parsedConfigFromFile;
 }
 
 bool MainTabbedComponent::SendCommandToDevice(const juce::MemoryBlock& data)
@@ -147,7 +209,8 @@ void MainTabbedComponent::StartNanoOcpClient()
     {
         // Pass message to the TestPage tab for displaying.
         auto testPage = static_cast<TestPage*>(getTabContentComponent(TestPageTabIndex));
-        testPage->AddMessage(message);
+        if (testPage)
+            testPage->AddMessage(message);
 
 #if JUCE_DEBUG
         auto receivedStr = juce::String::toHexString(message.getData(), static_cast<int>(message.getSize()));
@@ -173,7 +236,8 @@ void MainTabbedComponent::StartNanoOcpClient()
 
         // Pass connection status to TestPage tab in order to update status LED on the GUI
         auto testPage = static_cast<TestPage*>(this->getTabContentComponent(TestPageTabIndex));
-        testPage->SetConnectionStatus(3);
+        if (testPage)
+            testPage->SetConnectionStatus(3);
     };
 
     m_nanoOcp1Client->onConnectionLost = [=]()
@@ -182,9 +246,65 @@ void MainTabbedComponent::StartNanoOcpClient()
 
         // Pass connection status to TestPage tab in order to update status LED on the GUI
         auto testPage = static_cast<TestPage*>(this->getTabContentComponent(TestPageTabIndex));
-        testPage->SetConnectionStatus(0);
+        if (testPage)
+            testPage->SetConnectionStatus(0);
     };
 
     m_nanoOcp1Client->start();
 }
 
+bool MainTabbedComponent::CreatePagesFromConfigFile(const juce::File& configFIle)
+{
+    if (configFIle.existsAsFile())
+    {
+        auto rootXmlElement = parseXMLIfTagMatches(configFIle, "AES70CommandSet");
+        if (rootXmlElement)
+        {
+            bool atLeastOneAdded(false);
+
+            juce::String configVersion;
+            if (rootXmlElement->hasAttribute("version"))
+                configVersion = rootXmlElement->getStringAttribute("version");
+
+            auto childXmlElement = rootXmlElement->getChildByName("AES70Command");
+            while (childXmlElement)
+            {
+                // Create one StringGeneratorPage for each AES70Command.
+                auto page = StringGeneratorPage::CreatePageFromXmlElement(childXmlElement, this);
+                jassert(page != nullptr);
+                if (page != nullptr)
+                {
+                    // Add the StringGeneratorPage tab. Use the page's component name as tabName.
+                    addTab(page->getName(), AppBackgroundColour, page, true);
+                    atLeastOneAdded = true;
+                }
+
+                // Advance to next AES70Command tag.
+                childXmlElement = childXmlElement->getNextElementWithTagName("AES70Command");
+            }
+
+            if (atLeastOneAdded)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool MainTabbedComponent::CreateConfigFileFromPages(juce::File& configFile) const
+{
+    XmlElement rootElement("AES70CommandSet");
+    rootElement.setAttribute("version", JUCEApplicationBase::getInstance()->getApplicationVersion());
+    rootElement.setAttribute("date", Time::getCurrentTime().formatted("%d.%m.%Y"));
+
+    for (int tIdx = 0; tIdx < getNumTabs(); tIdx++)
+    {
+        auto genPage = dynamic_cast<StringGeneratorPage*>(getTabContentComponent(tIdx));
+        if (genPage)
+        {
+            rootElement.addChildElement(genPage->CreateXmlElementFromPage());
+        }
+    }
+
+    return rootElement.writeTo(configFile);
+}
