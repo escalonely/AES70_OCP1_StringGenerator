@@ -77,7 +77,7 @@ enum GuiLabels
  * Text content for all juce::Label components used on the GUI.
  */
 static const std::vector<juce::String> GuiLabelsText = {
-    /* LABELIDX_TITLE              */ "AES70 OCP.1 binary string generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
+    /* LABELIDX_TITLE              */ "AES70 OCP.1 PDU generator v" + juce::String(JUCE_STRINGIFY(JUCE_APP_VERSION)),
     /* LABELIDX_CLASS,             */ "Class:",
     /* LABELIDX_ONO,               */ "ONo:",
     /* LABELIDX_PROP,              */ "Property:",
