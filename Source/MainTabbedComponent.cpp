@@ -54,7 +54,7 @@ bool MainTabbedComponent::LoadFileViaDialog()
     m_fileChooser.reset(new juce::FileChooser("Select config file to LOAD...", 
                                               File::getCurrentWorkingDirectory(), 
                                               "*.xml",
-                                              false /* use native */));
+                                              true /* use native */));
 
     auto fileChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
     m_fileChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
@@ -76,9 +76,9 @@ bool MainTabbedComponent::LoadFileViaDialog()
 bool MainTabbedComponent::SaveFileViaDialog()
 {
     m_fileChooser.reset(new juce::FileChooser("Select config file to SAVE to...",
-        File::getCurrentWorkingDirectory(),
-        "*.xml",
-        false /* use native */));
+                                              File::getCurrentWorkingDirectory(),
+                                              "*.xml",
+                                              true /* use native */));
 
     auto fileChooserFlags = juce::FileBrowserComponent::saveMode | 
                             juce::FileBrowserComponent::canSelectFiles | 
