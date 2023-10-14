@@ -25,6 +25,12 @@
     </GROUP>
     <GROUP id="{6B66A945-B301-BCC2-57E8-3798FC5D9015}" name="Resources">
       <GROUP id="{36E37E30-6603-6B38-52E2-B72A2A0A1B80}" name="Images">
+        <FILE id="dneo2y" name="AES70_OCP1_StringGenerator.png" compile="0"
+              resource="1" file="Resources/Images/AES70_OCP1_StringGenerator.png"/>
+        <FILE id="E9WRHD" name="AES70_OCP1_StringGeneratorCanvas.png" compile="0"
+              resource="1" file="Resources/Images/AES70_OCP1_StringGeneratorCanvas.png"/>
+        <FILE id="CV4boh" name="AES70_OCP1_StringGeneratorRect.png" compile="0"
+              resource="1" file="Resources/Images/AES70_OCP1_StringGeneratorRect.png"/>
         <FILE id="X5RdkA" name="StartHere.png" compile="0" resource="1" file="Resources/Images/StartHere.png"/>
       </GROUP>
     </GROUP>
@@ -47,7 +53,7 @@
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <VS2019 targetFolder="Builds/VisualStudio2019">
+    <VS2019 targetFolder="Builds/VisualStudio2019" smallIcon="dneo2y" bigIcon="dneo2y">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="AES70_OCP1_StringGenerator"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="AES70_OCP1_StringGenerator"/>
@@ -60,7 +66,7 @@
         <MODULEPATH id="juce_gui_basics" path="submodules\JUCE\modules"/>
       </MODULEPATHS>
     </VS2019>
-    <VS2022 targetFolder="Builds/VisualStudio2022">
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="dneo2y" bigIcon="dneo2y">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>
         <CONFIGURATION isDebug="0" name="Release"/>
@@ -73,6 +79,20 @@
         <MODULEPATH id="juce_gui_basics" path="submodules\JUCE\modules"/>
       </MODULEPATHS>
     </VS2022>
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="CV4boh" bigIcon="CV4boh"
+               applicationCategory="public.app-category.utilities" hardenedRuntime="1">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_data_structures" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_events" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_graphics" path="submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_basics" path="submodules\JUCE\modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
