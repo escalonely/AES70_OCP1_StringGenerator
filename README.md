@@ -21,6 +21,10 @@ For more info in AES70 and/or OCA, visit https://ocaalliance.com/what-is-aes70/
 3. Copy the resulting binary string into your integration environment so that it can be transmitted via TCP/IP to the AES70-capable device in your network.
 4. Use the generated Response string to help decode the reply from the device to the above Command.
 
+## User Guide
+
+For a more in-depth look please check the [User Guide](Resources/Documentation/UserGuide.md).
+
 ## Submodules
 
 - JUCE: https://github.com/juce-framework/JUCE
