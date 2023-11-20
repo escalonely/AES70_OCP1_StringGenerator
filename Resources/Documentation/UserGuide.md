@@ -1,3 +1,4 @@
+![TitleBar.png](Resources/Documentation/TitleBar.png "0x3b")
 
 # AES70 OCP.1 Binary String Generator - User Guide
 
@@ -83,7 +84,25 @@ We know that it is of type Float32 which means it takes four bytes. And in the b
 
 ## Testing Commands
 
-*Coming soon...*
+Next to the command PDU the tool features a Test button, which is currently disabled. To enable it we need to go into the Test tab. 
+
+In this page we are able to configure the tool in order to establish a network connection with the device which we want to test against. 
+TODO: rewrite.
+
+Enter the device's IP address and the TCP port number that the device uses to listen to AES70/OCA messages.
+
+> AES70 defines a recommended range to be used by manufacturers for the OCP.1 listening port of their devices. 
+> This port number is an essential piece of information if we are hoping to integrate a AES70-capable device into our solution, so it needs to be obtained from the device's manufacturer.
+
+The tool will attempt to establish a connection and will display the connection status at all times. 
+
+As soon as the status is Online, the Test button on the main tab will become enabled.
+
+Clicking on the Test button will send the configured command to the remote device.
+
+If the device at the other end is AES70-capable, it will respond to our command. 
+
+TODO: continue...
 
 ### Command Handles
 
