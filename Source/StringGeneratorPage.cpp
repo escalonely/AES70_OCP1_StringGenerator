@@ -838,9 +838,13 @@ bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock
     // the commandDefinition will be defined differently.
     if (getMethodSelected)
     {
-        responseParamCount = 1;
-        responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
-        jassert(responseParamData.size() > 0);
+        // A response will only contain data if the status is OK.
+        if (responseStatus == 0 /* OCASTATUS_OK */)
+        {
+            responseParamCount = 1;
+            responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
+            jassert(responseParamData.size() > 0);
+        }
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
                                                             static_cast<std::uint16_t>(prop.m_type),
