@@ -31,6 +31,7 @@
  * Forward declarations.
  */
 class MainTabbedComponent;
+enum class ConnectionStatus;
 
 
 /**
@@ -54,9 +55,9 @@ public:
     /**
      * Update the status LED m_stateLed to display the current ConnectionStatus.
      *
-     * @param[in] connectionStatus TODO define enum.
+     * @param[in] status ConnectionStatus of the internal NanoOcpClient.
      */
-    void SetConnectionStatus(int connectionStatus);
+    void SetConnectionStatus(ConnectionStatus status);
 
     /**
      * Callback method that is triggered whenever the IP address or port are changed on the GUI by the user.

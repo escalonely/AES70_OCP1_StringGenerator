@@ -31,6 +31,7 @@
  * Forward declarations.
  */
 class MainTabbedComponent;
+enum class ConnectionStatus;
 namespace AES70
 {
     struct Property;
@@ -66,6 +67,14 @@ public:
      *          by the root XmlElement.
      */
     XmlElement* CreateXmlElementFromPage() const;
+
+    /**
+     * Update the enabled state of the "Test" button.
+     *
+     * @param[in] status ConnectionStatus of the internal NanoOcpClient.
+     */
+    void SetConnectionStatus(ConnectionStatus status);
+
     
 
     // Reimplemented from juce::Component

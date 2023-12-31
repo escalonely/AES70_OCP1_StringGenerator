@@ -177,35 +177,28 @@ void TestPage::AddMessage(const juce::MemoryBlock& message)
     m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString);
 }
 
-void TestPage::SetConnectionStatus(int connectionStatus)
+void TestPage::SetConnectionStatus(ConnectionStatus status)
 {
-    juce::String status("?");
+    juce::String statusString("?");
 
-    switch (connectionStatus)
+    switch (status)
     {
-    case 1: // ConnectionStatus_Connecting
-        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::blue);
-        m_stateLed.setToggleState(true, juce::dontSendNotification);
-        status = juce::String("Connecting");
-        break;
-    case 2: // ConnectionStatus_Timeout
-        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::yellow);
-        m_stateLed.setToggleState(true, juce::dontSendNotification);
-        status = juce::String("Timeout");
-        break;
-    case 3: // ConnectionStatus_Online
-        m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::green);
-        m_stateLed.setToggleState(true, juce::dontSendNotification);
-        status = juce::String("Online");
-        break;
-    default: // ConnectionStatus_Offline
-        m_stateLed.setToggleState(false, juce::dontSendNotification);
-        status = juce::String("Offline");
-        break;
+        case ConnectionStatus::Online:
+            m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::green);
+            m_stateLed.setToggleState(true, juce::dontSendNotification);
+            statusString = juce::String("Online");
+            break;
+
+        case ConnectionStatus::Offline:
+        default:
+            m_stateLed.setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::orangered);
+            m_stateLed.setToggleState(true, juce::dontSendNotification);
+            statusString = juce::String("Offline");
+            break;
     }
 
-    m_stateLed.setButtonText(status);
-    DBG("SetConnectionStatus: " + status);
+    m_stateLed.setButtonText(statusString);
+    DBG("SetConnectionStatus: " + statusString);
 }
 
 void TestPage::paint(juce::Graphics& g)

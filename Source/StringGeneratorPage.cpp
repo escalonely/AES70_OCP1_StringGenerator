@@ -621,6 +621,24 @@ XmlElement* StringGeneratorPage::CreateXmlElementFromPage() const
     return element;
 }
 
+void StringGeneratorPage::SetConnectionStatus(ConnectionStatus status)
+{
+    bool testButtonEnabled(false);
+    switch (status)
+    {
+        case ConnectionStatus::Online:
+            testButtonEnabled = !m_ocaCommandTextEditor.isEmpty();
+            break;
+
+        case ConnectionStatus::Offline:
+        default:
+            break;
+    }
+    
+    // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
+    m_sendButton.setEnabled(testButtonEnabled);
+}
+
 void StringGeneratorPage::ResetComponents(int step)
 {
     DBG("ResetComponents step " + juce::String(step));
@@ -786,7 +804,18 @@ void StringGeneratorPage::UpdateBinaryStrings()
     m_ocaResponseTextEditor.setText(responseString, false);
     m_ocaNotificationTextEditor.setText(notificationString, false);
 
-    m_sendButton.setEnabled(true);
+    // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
+    switch (m_parent->GetConnectionStatus())
+    {
+        case ConnectionStatus::Online:
+            m_sendButton.setEnabled(true);
+            break;
+    
+        case ConnectionStatus::Offline:
+        default:
+            m_sendButton.setEnabled(false);
+            break;
+    }
 }
 
 bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)

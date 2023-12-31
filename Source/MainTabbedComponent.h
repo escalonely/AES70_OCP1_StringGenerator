@@ -35,6 +35,21 @@ namespace NanoOcp1
     class NanoOcp1Client;
 }
 
+/**
+ * Status of the internal m_nanoOcp1Client
+ */
+enum class ConnectionStatus
+{
+    /**
+     * The m_nanoOcp1Client is attempting a connection to the provided IP address and port.
+     */
+    Offline = 0,
+
+    /**
+     * The m_nanoOcp1Client is connected successfully with the provided IP address and port.
+     */
+    Online
+};
 
 /**
  * Custom juce::TabbedComponent, a component with a TabbedButtonBar along the top.
@@ -94,6 +109,13 @@ public:
      * @return  True if the parameters could be retrieved successfully.
      */
     bool GetConnectionParameters(juce::String& address, int& port) const;
+
+    /**
+     * Get the current connection status of the m_nanoOcp1Client.
+     *
+     * @return The current connection status of the m_nanoOcp1Client.
+     */
+    ConnectionStatus GetConnectionStatus() const;
 
 
     // Reimplemented from juce::TabbedComponent
