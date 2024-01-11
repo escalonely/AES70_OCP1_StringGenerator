@@ -54,19 +54,6 @@
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <VS2019 targetFolder="Builds/VisualStudio2019" smallIcon="dneo2y" bigIcon="dneo2y">
-      <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="AES70_OCP1_StringGenerator"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="AES70_OCP1_StringGenerator"/>
-      </CONFIGURATIONS>
-      <MODULEPATHS>
-        <MODULEPATH id="juce_core" path="submodules\JUCE\modules"/>
-        <MODULEPATH id="juce_data_structures" path="submodules\JUCE\modules"/>
-        <MODULEPATH id="juce_events" path="submodules\JUCE\modules"/>
-        <MODULEPATH id="juce_graphics" path="submodules\JUCE\modules"/>
-        <MODULEPATH id="juce_gui_basics" path="submodules\JUCE\modules"/>
-      </MODULEPATHS>
-    </VS2019>
     <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="dneo2y" bigIcon="dneo2y">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>
