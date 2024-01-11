@@ -25,13 +25,8 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AbstractPage.h"
 
-
-/**
- * Forward declarations.
- */
-class MainTabbedComponent;
-enum class ConnectionStatus;
 
 
 /**
@@ -39,7 +34,7 @@ enum class ConnectionStatus;
  * devices via TCP/IP. This page provides GUI elements for TCP connection configuration,
  * as well as fields for monitoring the incoming OCP.1 Notifications and Responses.
  */
-class TestPage : public juce::Component
+class TestPage : public AbstractPage
 {
 public:
     TestPage(MainTabbedComponent* parent);
@@ -53,19 +48,17 @@ public:
     void AddMessage(const juce::MemoryBlock& message);
 
     /**
-     * Update the status LED m_stateLed to display the current ConnectionStatus.
-     *
-     * @param[in] status ConnectionStatus of the internal NanoOcpClient.
-     */
-    void SetConnectionStatus(ConnectionStatus status);
-
-    /**
      * Callback method that is triggered whenever the IP address or port are changed on the GUI by the user.
      *
      * @param[in] ipAddress New IP address string.
      * @param[in] ipPort    New port number.
      */
     std::function<void(const juce::String& ipAddress, int ipPort)> OnDeviceIpAddressChanged;
+
+
+    // Reimplemented from AbstractPage
+
+    void UpdateConnectionStatus(ConnectionStatus status) override;
 
 
     // Reimplemented from juce::Component

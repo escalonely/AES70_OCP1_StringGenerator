@@ -99,7 +99,8 @@ static const std::vector<juce::String> GuiLabelsText = {
 //==============================================================================
 
 StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
-    :   m_parent(parent),
+    :   AbstractPage(parent), 
+        m_parent(parent),
         m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
         m_ocaPropertyComboBox(juce::ComboBox("OCA Property Idx")),
@@ -621,7 +622,7 @@ XmlElement* StringGeneratorPage::CreateXmlElementFromPage() const
     return element;
 }
 
-void StringGeneratorPage::SetConnectionStatus(ConnectionStatus status)
+void StringGeneratorPage::UpdateConnectionStatus(ConnectionStatus status)
 {
     bool testButtonEnabled(false);
     switch (status)

@@ -58,7 +58,8 @@ static const std::vector<juce::String> GuiLabelsText = {
 //==============================================================================
 
 TestPage::TestPage(MainTabbedComponent* parent)
-    :   m_parent(parent),
+    :   AbstractPage(parent),
+        m_parent(parent),
         m_ipAddressEdit(juce::TextEditor("IpAddressEdit")),
         m_ipPortEdit(juce::TextEditor("IpAddressEdit")),
         m_stateLed(juce::TextButton("StatusLed")),
@@ -177,7 +178,7 @@ void TestPage::AddMessage(const juce::MemoryBlock& message)
     m_incomingMessageDisplayEdit.insertTextAtCaret(incomingString);
 }
 
-void TestPage::SetConnectionStatus(ConnectionStatus status)
+void TestPage::UpdateConnectionStatus(ConnectionStatus status)
 {
     juce::String statusString("?");
 

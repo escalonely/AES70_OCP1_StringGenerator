@@ -25,13 +25,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AbstractPage.h"
 
 
 /**
  * Forward declarations.
  */
-class MainTabbedComponent;
-enum class ConnectionStatus;
 namespace AES70
 {
     struct Property;
@@ -41,9 +40,8 @@ namespace AES70
 
 /**
  * Component for configuring and generating OCP.1 binary strings.
- * It inherits from juce::Viewport to allow scrolling through the contents inside.
  */
-class StringGeneratorPage : public juce::Viewport
+class StringGeneratorPage : public AbstractPage
 {
 public:
     StringGeneratorPage(MainTabbedComponent* const parent);
@@ -68,13 +66,10 @@ public:
      */
     XmlElement* CreateXmlElementFromPage() const;
 
-    /**
-     * Update the enabled state of the "Test" button.
-     *
-     * @param[in] status ConnectionStatus of the internal NanoOcpClient.
-     */
-    void SetConnectionStatus(ConnectionStatus status);
 
+    // Reimplemented from AbstractPage
+
+    void UpdateConnectionStatus(ConnectionStatus status) override;
     
 
     // Reimplemented from juce::Component

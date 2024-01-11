@@ -99,7 +99,7 @@ bool MainTabbedComponent::InitializePages(const juce::File& configFile)
 {
     // First tab is always the "Test" tab
     auto testPage = new TestPage(this);
-    testPage->SetConnectionStatus(ConnectionStatus::Offline);
+    testPage->UpdateConnectionStatus(ConnectionStatus::Offline);
     addTab(TestPageDefaultName, AppBackgroundColour, testPage, true);
     testPage->OnDeviceIpAddressChanged = [=](const juce::String& ipAddress, int ipPort)
         {
@@ -129,7 +129,7 @@ bool MainTabbedComponent::InitializePages(const juce::File& configFile)
     }
 
     // Last tab is always the "+" tab
-    addTab("+", AppBackgroundColour, new juce::Component(), true);
+    addTab("+", AppBackgroundColour, new DummyPage(this), true);
     getTabbedButtonBar().getTabButton(getNumTabs() - 1)->onClick = [=]()
         {
             // Clicking on the "+" tab will add a new StringGeneratorPage tab.
@@ -245,22 +245,12 @@ void MainTabbedComponent::StartNanoOcpClient()
 
             for (int tabIdx = 0; tabIdx < getNumTabs(); tabIdx++)
             {
-                // TODO: define common interface class with SetConnectionStatus so this check can be skipped
-                if (tabIdx == TestPageTabIndex)
-                {
-                    // Pass connection status to TestPage tab in order to update status LED on the GUI.
-                    auto testPage = dynamic_cast<TestPage*>(getTabContentComponent(tabIdx));
-                    if (testPage)
-                        testPage->SetConnectionStatus(ConnectionStatus::Online);
-                }
-                else
-                {
-                    // Pass connection status to StringGeneratorPage tab in order to update 
-                    // enabled status of the "Test" button.
-                    auto stringGenPage = dynamic_cast<StringGeneratorPage*>(getTabContentComponent(tabIdx));
-                    if (stringGenPage)
-                        stringGenPage->SetConnectionStatus(ConnectionStatus::Online);
-                }
+                // Pass connection status to each tab.
+                // In case of TestPage this will update status LED on the page.
+                // In case of StringGeneratorPage it will update the enabled status of the Test button.
+                auto page = static_cast<AbstractPage*>(getTabContentComponent(tabIdx));
+                if (page)
+                    page->UpdateConnectionStatus(ConnectionStatus::Online);
             }
         };
 
@@ -270,22 +260,12 @@ void MainTabbedComponent::StartNanoOcpClient()
 
             for (int tabIdx = 0; tabIdx < getNumTabs(); tabIdx++)
             {
-                // TODO: define common interface class with SetConnectionStatus so this check can be skipped
-                if (tabIdx == TestPageTabIndex)
-                {
-                    // Pass connection status to TestPage tab in order to update status LED on the GUI.
-                    auto testPage = dynamic_cast<TestPage*>(getTabContentComponent(tabIdx));
-                    if (testPage)
-                        testPage->SetConnectionStatus(ConnectionStatus::Offline);
-                }
-                else
-                {
-                    // Pass connection status to StringGeneratorPage tab in order to update 
-                    // enabled status of the "Test" button.
-                    auto stringGenPage = dynamic_cast<StringGeneratorPage*>(getTabContentComponent(tabIdx));
-                    if (stringGenPage)
-                        stringGenPage->SetConnectionStatus(ConnectionStatus::Offline);
-                }
+                // Pass connection status to each tab.
+                // In case of TestPage this will update status LED on the page.
+                // In case of StringGeneratorPage it will update the enabled status of the Test button.
+                auto page = static_cast<AbstractPage*>(getTabContentComponent(tabIdx));
+                if (page)
+                    page->UpdateConnectionStatus(ConnectionStatus::Offline);
             }
         };
 
