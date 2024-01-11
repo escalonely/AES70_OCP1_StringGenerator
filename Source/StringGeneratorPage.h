@@ -149,9 +149,6 @@ protected:
                                             juce::NotificationType notification = juce::sendNotificationAsync);
 
 private:
-    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
-    MainTabbedComponent* m_parent;
-
     // Component inside the main juce::Viewport, set with setViewedComponent.
     juce::Component m_container;
 

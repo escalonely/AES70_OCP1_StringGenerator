@@ -100,7 +100,6 @@ static const std::vector<juce::String> GuiLabelsText = {
 
 StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     :   AbstractPage(parent), 
-        m_parent(parent),
         m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
         m_ocaPropertyComboBox(juce::ComboBox("OCA Property Idx")),
@@ -456,7 +455,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
         CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
 
         // Pass command MemoryBlock to the parent MainTabbedComponent.
-        m_parent->SendCommandToDevice(commandMemBlock);
+        GetMainComponent()->SendCommandToDevice(commandMemBlock);
     };
 
     setSize(AppWindowDefaultWidth, AppWindowDefaultHeight);
@@ -483,7 +482,7 @@ StringGeneratorPage* StringGeneratorPage::CreatePageFromXmlElement(const juce::X
     if (pPage == nullptr)
         return nullptr;
 
-    // Set the new page's component name, which will be used by m_parent as its tab name.
+    // Set the new page's component name, which will be used as its tab name.
     juce::String pageName("Page " + juce::String(parent->getNumTabs()));
     if (aes70CommandElement->hasAttribute("name"))
         pageName = aes70CommandElement->getStringAttribute("name");
@@ -806,7 +805,7 @@ void StringGeneratorPage::UpdateBinaryStrings()
     m_ocaNotificationTextEditor.setText(notificationString, false);
 
     // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
-    switch (m_parent->GetConnectionStatus())
+    switch (GetMainComponent()->GetConnectionStatus())
     {
         case ConnectionStatus::Online:
             m_sendButton.setEnabled(true);

@@ -72,9 +72,6 @@ protected:
 
 
 private:
-    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
-    MainTabbedComponent* m_parent;
-
     // Hyperlink to the project webpage.
     juce::HyperlinkButton m_hyperlink;
 

@@ -41,9 +41,9 @@ enum class ConnectionStatus;
 class AbstractPage : public juce::Viewport
 {
 public:
-    AbstractPage(MainTabbedComponent* const /*parent*/)
+    AbstractPage(MainTabbedComponent* const parent)
+        : m_parent(parent)
     {
-        // TODO: parent as member
     };
 
     ~AbstractPage() override
@@ -57,6 +57,23 @@ public:
      * @param[in] status ConnectionStatus of the internal NanoOcpClient.
      */
     virtual void UpdateConnectionStatus(ConnectionStatus status) = 0;
+
+    /**
+     * Get the application's main TabbedComponent, which contains this page as one of its tabs.
+     * 
+     * @return Pointer to this page's parent MainTabbedComponent.
+     */
+    MainTabbedComponent* GetMainComponent()
+    {
+        return m_parent;
+    };
+
+private:
+    /** 
+     * Parent TabbedComponent which contains this page component
+     * as one or  of its tabs. 
+     */
+    MainTabbedComponent* m_parent;
 };
 
 

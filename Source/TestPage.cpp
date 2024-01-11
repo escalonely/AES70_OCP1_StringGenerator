@@ -59,7 +59,6 @@ static const std::vector<juce::String> GuiLabelsText = {
 
 TestPage::TestPage(MainTabbedComponent* parent)
     :   AbstractPage(parent),
-        m_parent(parent),
         m_ipAddressEdit(juce::TextEditor("IpAddressEdit")),
         m_ipPortEdit(juce::TextEditor("IpAddressEdit")),
         m_stateLed(juce::TextButton("StatusLed")),
@@ -122,7 +121,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     // Initialize displayed ip address and port.
     juce::String address;
     int port;
-    if (m_parent->GetConnectionParameters(address, port))
+    if (GetMainComponent()->GetConnectionParameters(address, port))
     {
         m_ipAddressEdit.setText(address, juce::dontSendNotification);
         m_ipPortEdit.setText(juce::String(port), juce::dontSendNotification);
@@ -147,7 +146,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_loadButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_loadButton.onClick = [=]()
         {
-            m_parent->LoadFileViaDialog();
+            GetMainComponent()->LoadFileViaDialog();
         };
 
     m_saveButton.setClickingTogglesState(false);
@@ -155,7 +154,7 @@ TestPage::TestPage(MainTabbedComponent* parent)
     m_saveButton.setColour(juce::TextButton::ColourIds::textColourOffId, LabelEnabledTextColour);
     m_saveButton.onClick = [=]()
         {
-            m_parent->SaveFileViaDialog();
+            GetMainComponent()->SaveFileViaDialog();
         };
 
     setSize(10, 10);
