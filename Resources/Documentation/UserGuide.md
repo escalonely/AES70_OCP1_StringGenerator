@@ -1,108 +1,116 @@
 ![TitleBar.png](Resources/Documentation/TitleBar.png "0x3b")
 
-# AES70 OCP.1 Binary String Generator - User Guide
+# AES70 OCP.1 PDU Generator - User Guide
 
 ## What is this tool for?
 
-If we are trying to integrate AES70-capable devices into our remote control solution, this tool will generate the binary strings or PDUs necessary for whatever commands we want to send to them.
+The AES70 OCP.1 PDU Generator is a companion and debugging tool for integrating AES70-capable devices into remote control solutions.
 
-These PDUs are represented in hex notation as text that can be copy-and-pasted into the control environment being used. We may need to use a LUA or python script to send these over a TCP socket connection, for example.
+It generates binary strings or PDUs for a variety of common Commands defined by the AES70 standard. 
+
+These PDUs are represented as text in hexadecimal notation. This text can then be copy-and-pasted into the control environment being used. A LUA or python script may be used to send these PDUs over a TCP connection, for example.
 
 ## Getting started
 
 An AES70-capable device hosts a number of AES70 "objects" which can be accessible over the network. These objects represent the state of the device, and can be used as an interface to interact with the device.
-
-To start using this tool, we need to know exactly which object we wish to interact with. 
 
 ### Class
 
 Every AES70 object belongs to a specific class. The class of an object determines what functionality it offers. 
 There are many classes defined by AES70. This tool currently only supports the most common ones, but more will be added in the future.
 
-> It is important to know that the AES70 class structure is hierchical. This means that every class is a specialization of a more generic "parent" class. 
-> A sub-class inherits all the functionality and properties from its parent class.
-
-So let's say we want to use this tool to generate a command to set the ouput channel gain setting on our AES70-capable amplifier. In this case we select OcaGain from the list.
+> It is important to know that the AES70 class structure is hierarchical. This means that every class is a specialization of a more generic "parent" class. 
+> A sub-class inherits all the functionality and Properties from its parent class.
 
 ### ONo
 
-The next thing we need to know about the object we wish to interact with is its object number, or ONo for short.
+The next attribute required to interact with a given object is its object number, or ONo for short.
 
-Every object hosted by a AES70-capable device has a unique ONo that is used to identify that object. We can think of it as a kind of object ID.
+Every object hosted by an AES70-capable device has a unique ONo that is used to identify that object. 
 
-> Keep in mind that a device can host several objects of the same class, but each instance of that class needs to have its own ONo.
+> Keep in mind that a device can host several objects of the same class, but each instance of that class will have its own ONo.
 > For example, a two-channel amplifier could have two OcaGain objects, one for channel A with the ONo 10000, and one for channel B with the ONo 10001. 
 
-Aside from a few reserved numbers / number range, it is up to the manufacturer to choose whatever ONos they want to use in their AES70-capable device. So if we want to integrate with a particular device we need to obtain the required ONos from the manufacturer.
+Aside from a few reserved numbers / number range, it is up to the manufacturer to choose whatever ONos they want to use in their AES70-capable device. 
+
+In order to integrate with a particular device, the required ONos need to be obtained from the manufacturer.
 
 ### Property
 
-Next we need to specify which property we want to query or modify in the specified object.
+Next, the Property which is to be queried or modified needs to be specified.
 
-Each AES70 class defines a number of so-called properties that are used to represent a state or a setting in the physical device.
-Additionally, each AES70 class inherits all the properties defined by its parent classes.
+Each AES70 class defines a number of so-called Properties that are used to represent a state or a setting in the physical device.
 
-> TODO: number coordinates
-> 
+Additionally, each AES70 class inherits all the Properties defined by its parent classes.
 
-Selecting a property from the list will show us the level within the AES70 class hierarchy at which this property was defined, as well as the data type used by the property.
+Selecting a Property from the list will show the level within the AES70 class hierarchy at which this Property was defined, as well as the data type used.
 
-For example, OcaGain defines the "Gain" property used to represent a gain value in dB. But it also defines the "Enabled" property which is inherited from OcaWorker, and the "Role" property which is inherited from OcaRoot. Let's stay with Gain for now.
+> For example, OcaGain defines the "Gain" Property used to represent a gain value in dB. But it also defines the "Enabled" Property which is inherited from OcaWorker, and the "Role" Property which is inherited from OcaRoot. 
 
 ### SetValue Command
 
-Each AES70 class also defines a number of commands or methods, which can be invoked on objects of that class. The most common commands are to get and to set the value of the selected property. 
+Each AES70 class also defines a number of Commands or methods, which can be invoked on objects of that class. The most common Commands are to get and to set the value of each Property. 
 
-If we select SetValue, we can then specify the value which we want to set the selected property to. Drag the slider to adjust the value, or click on the slider to type in an exact number.
+Having selected the SetValue Command, the tool will provide a UI element that can be used to specify the value which the selected Property should be set to. 
 
-As you change the value you can already see the binary string below changing aswell.
+### Binary string / PDU
 
-### Binary string
+The first of the two large fields at the bottom of the tool contains a textual, hex-based representation of the resulting TCP/IP binary string or PDU. This is what would need to be sent to the device in order to perform the desired Command.
 
-The first of the two large fields below is the result of our configuration above. It contains a textual hex-based representation of the TCP/IP message, which needs to be sent to the device to perform the desired command.
+> Note that the generated PDU needs to be sent as binary and not as text, as done in other protocols such as OSC.
 
-The binary string or PDU will need to be copied from here into a script, a piece of code, or whatever integration environment we are using.
-
-This tool offers the possibility to immediately test the command with a real connected device. But we will come back to this later. TODO where?
+The binary string or PDU can be copied over into a script, a piece of code, or whatever integration environment is being used.
 
 ### Response
 
-Assuming we were to send this command to a real AES70-capable device, the bottom field shows the PDU that we would receive from the device as a response to our command.
+In addition to the Command PDU, the AES70 OCP.1 PDU Generator tool also generates a simulated Response PDU, shown on the lowermost textfield.
 
-The response for a SetValue command contains really only one piece of interesting information: the response status. If we used an invalid ONo in our command, for example, the device would respond with a "Bad Ono" status, in which case the response PDU would look like what the tool shows. This reverse-engineering of received responses helps us debug our commands until we obtain the "OK" status, meaning that the device has performed the desired SetValue command successfully.
+This Response is what a real AES70-capable device is expected to send back as an answer to the above Command.
+
+The Response for a SetValue Command contains really only one piece of interesting information: the Response Status. 
+
+> For example: if an invalid or non-existing ONo was used in the Command, the device is expected to respond with a "Bad Ono" Status.
+> This Status can be selected on the tool's UI in order to simulate such an error scenario.
+> This reverse-engineering of Responses can help to debug Commands until the "OK" Status is obtained, meaning that the device was able to perform the Command successfully.
 
 ### GetValue Command and Response
 
-If we choose GetValue instead, the command's PDU becomes very simple: just give me the value, please. 
+If the GetValue Command is selected instead, the Command's PDU becomes very simple: please provide the Property's current value. 
 
-Assuming the device understood our command and is able to send us the current value of our OcaGain object, the Response PDU contains the value. 
+The Response PDU on the other hand, is now expected to contain the requested value. 
 
-We know that it is of type Float32 which means it takes four bytes. And in the bottom field you can see those four bytes changing as we drag the slider to adjust the value. 
+The tool provides a UI element that can be used to set the value which the Response should simulate. This feature of the tool is meant to help decode actual Responses received from real AES70-capable devices.
 
-> Note that the value will not be included in the Response if the status is not OK.
-> TODO: confirm
+> Note that the requested value will not be included in a Response if the Status is not OK.
 
 ## Testing Commands
 
-Next to the command PDU the tool features a Test button, which is currently disabled. To enable it we need to go into the Test tab. 
+Next to the Command PDU the tool features a Test button, which is initially disabled. 
 
-In this page we are able to configure the tool in order to establish a network connection with the device which we want to test against. 
-TODO: rewrite.
+To enable it, the AES70 OCP.1 PDU Generator tool needs to be connected to a test device on the network. 
 
-Enter the device's IP address and the TCP port number that the device uses to listen to AES70/OCA messages.
+This can be configured on the Test page. Simply enter the device's IP address and the TCP port number that the device uses to listen to AES70/OCA messages.
 
 > AES70 defines a recommended range to be used by manufacturers for the OCP.1 listening port of their devices. 
-> This port number is an essential piece of information if we are hoping to integrate a AES70-capable device into our solution, so it needs to be obtained from the device's manufacturer.
+> Information about the port used by the actual test device needs to be obtained from the device's manufacturer.
 
-The tool will attempt to establish a connection and will display the connection status at all times. 
+The tool will attempt to establish a connection and will display the connection state on the Test page at all times. 
 
-As soon as the status is Online, the Test button on the main tab will become enabled.
+Once the test device is Online, the Test button on the string generator page will become enabled.
 
-Clicking on the Test button will send the configured command to the remote device.
+Clicking on the Test button will send the configured Command to the remote device.
 
-If the device at the other end is AES70-capable, it will respond to our command. 
+If the device at the other end is AES70-capable, it will respond to this Command. 
 
-TODO: continue...
+The number shown on the Test tab will indicate how many AES70 Responses have been received since the last time the Test page was viewed. 
+
+Switching to the Test tab will reset the number of unread Responses. 
+
+On the field at the bottom of the Test page, all received Responses will be displayed with their corresponding time stamps. 
+
+Keep in mind that the Responses shown here were actually sent by the test device, and not simply generated or simulated by the tool, like the expected Response PDU shown below the Command.
+
+Comparing the real and the expected Responses can help to debug Commands and reverse-engineer Responses.
 
 ### Command Handles
 
