@@ -23,6 +23,8 @@
 */
 
 #include "AES70.h"
+#include <Ocp1DataTypes.h>
+
 
 namespace AES70
 {

@@ -26,6 +26,8 @@
 #include "MainTabbedComponent.h"
 #include "Common.h"
 #include "AES70.h"
+#include <Ocp1DataTypes.h>
+#include <Ocp1Message.h>
 
 
 /**

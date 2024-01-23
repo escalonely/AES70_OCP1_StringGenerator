@@ -18,6 +18,9 @@
                 file="submodules/NanoOcp/Source/Ocp1ConnectionServer.cpp"/>
           <FILE id="h2iPok" name="Ocp1ConnectionServer.h" compile="0" resource="0"
                 file="submodules/NanoOcp/Source/Ocp1ConnectionServer.h"/>
+          <FILE id="okMeVZ" name="Ocp1DataTypes.cpp" compile="1" resource="0"
+                file="submodules/NanoOcp/Source/Ocp1DataTypes.cpp"/>
+          <FILE id="xTfvAH" name="Ocp1DataTypes.h" compile="0" resource="0" file="submodules/NanoOcp/Source/Ocp1DataTypes.h"/>
           <FILE id="rvWjXy" name="Ocp1Message.cpp" compile="1" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.cpp"/>
           <FILE id="YOVqxa" name="Ocp1Message.h" compile="0" resource="0" file="submodules/NanoOcp/Source/Ocp1Message.h"/>
         </GROUP>
