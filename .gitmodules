@@ -4,3 +4,6 @@
 [submodule "submodules/NanoOcp"]
 	path = submodules/NanoOcp
 	url = https://github.com/ChristianAhrens/NanoOcp.git
+[submodule "submodules/create-dmg"]
+	path = submodules/create-dmg
+	url = https://github.com/create-dmg/create-dmg

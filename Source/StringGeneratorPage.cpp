@@ -99,7 +99,7 @@ static const std::vector<juce::String> GuiLabelsText = {
 //==============================================================================
 
 StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
-    :   m_parent(parent),
+    :   AbstractPage(parent), 
         m_ocaONoTextEditor(juce::TextEditor("OCA ONo")), 
         m_ocaClassComboBox(juce::ComboBox("OCA Class")),
         m_ocaPropertyComboBox(juce::ComboBox("OCA Property Idx")),
@@ -455,7 +455,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
         CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
 
         // Pass command MemoryBlock to the parent MainTabbedComponent.
-        m_parent->SendCommandToDevice(commandMemBlock);
+        GetMainComponent()->SendCommandToDevice(commandMemBlock);
     };
 
     setSize(AppWindowDefaultWidth, AppWindowDefaultHeight);
@@ -482,7 +482,7 @@ StringGeneratorPage* StringGeneratorPage::CreatePageFromXmlElement(const juce::X
     if (pPage == nullptr)
         return nullptr;
 
-    // Set the new page's component name, which will be used by m_parent as its tab name.
+    // Set the new page's component name, which will be used as its tab name.
     juce::String pageName("Page " + juce::String(parent->getNumTabs()));
     if (aes70CommandElement->hasAttribute("name"))
         pageName = aes70CommandElement->getStringAttribute("name");
@@ -619,6 +619,24 @@ XmlElement* StringGeneratorPage::CreateXmlElementFromPage() const
     }
 
     return element;
+}
+
+void StringGeneratorPage::UpdateConnectionStatus(ConnectionStatus status)
+{
+    bool testButtonEnabled(false);
+    switch (status)
+    {
+        case ConnectionStatus::Online:
+            testButtonEnabled = !m_ocaCommandTextEditor.isEmpty();
+            break;
+
+        case ConnectionStatus::Offline:
+        default:
+            break;
+    }
+    
+    // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
+    m_sendButton.setEnabled(testButtonEnabled);
 }
 
 void StringGeneratorPage::ResetComponents(int step)
@@ -786,7 +804,18 @@ void StringGeneratorPage::UpdateBinaryStrings()
     m_ocaResponseTextEditor.setText(responseString, false);
     m_ocaNotificationTextEditor.setText(notificationString, false);
 
-    m_sendButton.setEnabled(true);
+    // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
+    switch (GetMainComponent()->GetConnectionStatus())
+    {
+        case ConnectionStatus::Online:
+            m_sendButton.setEnabled(true);
+            break;
+    
+        case ConnectionStatus::Offline:
+        default:
+            m_sendButton.setEnabled(false);
+            break;
+    }
 }
 
 bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)
@@ -838,9 +867,13 @@ bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock
     // the commandDefinition will be defined differently.
     if (getMethodSelected)
     {
-        responseParamCount = 1;
-        responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
-        jassert(responseParamData.size() > 0);
+        // A response will only contain data if the status is OK.
+        if (responseStatus == 0 /* OCASTATUS_OK */)
+        {
+            responseParamCount = 1;
+            responseParamData = m_ocaObject->CreateParamDataForComponent(m_ocaResponseValueComponent.get(), prop);
+            jassert(responseParamData.size() > 0);
+        }
 
         commandDefinition = NanoOcp1::Ocp1CommandDefinition(targetOno, 
                                                             static_cast<std::uint16_t>(prop.m_type),

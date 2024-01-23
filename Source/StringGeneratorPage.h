@@ -25,12 +25,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "AbstractPage.h"
 
 
 /**
  * Forward declarations.
  */
-class MainTabbedComponent;
 namespace AES70
 {
     struct Property;
@@ -40,9 +40,8 @@ namespace AES70
 
 /**
  * Component for configuring and generating OCP.1 binary strings.
- * It inherits from juce::Viewport to allow scrolling through the contents inside.
  */
-class StringGeneratorPage : public juce::Viewport
+class StringGeneratorPage : public AbstractPage
 {
 public:
     StringGeneratorPage(MainTabbedComponent* const parent);
@@ -66,6 +65,11 @@ public:
      *          by the root XmlElement.
      */
     XmlElement* CreateXmlElementFromPage() const;
+
+
+    // Reimplemented from AbstractPage
+
+    void UpdateConnectionStatus(ConnectionStatus status) override;
     
 
     // Reimplemented from juce::Component
@@ -145,9 +149,6 @@ protected:
                                             juce::NotificationType notification = juce::sendNotificationAsync);
 
 private:
-    // Parent TabbedComponent which contains this page component as one or more of its tabs. 
-    MainTabbedComponent* m_parent;
-
     // Component inside the main juce::Viewport, set with setViewedComponent.
     juce::Component m_container;
 
