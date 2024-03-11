@@ -46,6 +46,11 @@ static constexpr int MethodIndexForRemoveSubscription = MethodIndexForAddSubscri
 static constexpr int ClassIndexForCustomClass = 256;
 
 /**
+ * Number of method indexes available for custom Set & Get Commands.
+ */
+static constexpr int MaxMethodIndexForCustomClass = 8;
+
+/**
  * Expected user workflow, separated in discrete steps.
  */
 enum WorkflowSteps
@@ -343,13 +348,13 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
                 m_ocaLabels.at(LABELIDX_PROP_PARAMTYPE)->setColour(juce::Label::textColourId, LabelEnabledTextColour);
 
                 // Fill m_ocaCommandComboBox with dummy Get commands
-                for (int commandIdx = 1; commandIdx <= 8; commandIdx++)
+                for (int commandIdx = 1; commandIdx <= MaxMethodIndexForCustomClass; commandIdx++)
                     m_ocaCommandComboBox.addItem(juce::String(commandIdx) + ": GetValue", commandIdx);
 
                 // Fill m_ocaCommandComboBox with dummy Set commands
                 m_ocaCommandComboBox.addSeparator();
-                for (int commandIdx = 1; commandIdx <= 8; commandIdx++)
-                    m_ocaCommandComboBox.addItem(juce::String(commandIdx) + ": SetValue", commandIdx + 8);
+                for (int commandIdx = 1; commandIdx <= MaxMethodIndexForCustomClass; commandIdx++)
+                    m_ocaCommandComboBox.addItem(juce::String(commandIdx) + ": SetValue", commandIdx + MaxMethodIndexForCustomClass);
             }
 
             // In addition to the property-related commands, always offer the Add & RemoveSubscription commands.
@@ -755,8 +760,8 @@ void StringGeneratorPage::CreateValueComponents()
     else
     {
         prop = m_ocaObject->GetProperties().back(); 
-        getMethodSelected = (methodIdx <= 8);
-        setMethodSelected = (methodIdx > 8) && (methodIdx <= 16);
+        getMethodSelected = (methodIdx <= MaxMethodIndexForCustomClass);
+        setMethodSelected = (methodIdx > MaxMethodIndexForCustomClass) && (methodIdx <= MaxMethodIndexForCustomClass * 2);
     }
 
     // Create a component appropriate for displaying this properties value.
@@ -861,8 +866,11 @@ bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock
     {
         prop = m_ocaObject->GetProperties().back();
         commandDefLevel = m_ocaCommandDefLevelComboBox.getSelectedId();
-        getMethodSelected = (methodIdx <= 8);
-        setMethodSelected = (methodIdx > 8) && (methodIdx <= 16);
+        getMethodSelected = (methodIdx <= MaxMethodIndexForCustomClass);
+        setMethodSelected = (methodIdx > MaxMethodIndexForCustomClass) && (methodIdx <= MaxMethodIndexForCustomClass * 2);
+
+        // Subtract the MaxMethodIndexForCustomClass offset for Set Commands
+        methodIdx = setMethodSelected ? (methodIdx - MaxMethodIndexForCustomClass) : methodIdx;
     }
 
     std::uint32_t targetOno = static_cast<std::uint32_t>(m_ocaONoTextEditor.getText().getIntValue());
