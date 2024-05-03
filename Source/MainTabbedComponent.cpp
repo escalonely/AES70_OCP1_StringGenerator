@@ -213,7 +213,7 @@ void MainTabbedComponent::resized()
 
 void MainTabbedComponent::StartNanoOcpClient()
 {
-    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014);
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>("127.0.0.1", 50014, true /* synch callbacks */);
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
     {
         // Pass message to the TestPage tab for displaying.
