@@ -40,6 +40,10 @@
       </GROUP>
     </GROUP>
     <GROUP id="{2156CA2B-72B1-D5CD-005E-9718D619F5B0}" name="Source">
+      <FILE id="ZlwUns" name="CustomOcp1Message.cpp" compile="1" resource="0"
+            file="Source/CustomOcp1Message.cpp"/>
+      <FILE id="RusS1U" name="CustomOcp1Message.h" compile="0" resource="0"
+            file="Source/CustomOcp1Message.h"/>
       <FILE id="hjacwO" name="AbstractPage.h" compile="0" resource="0" file="Source/AbstractPage.h"/>
       <FILE id="LeB7eW" name="Common.h" compile="0" resource="0" file="Source/Common.h"/>
       <FILE id="fPL2AH" name="TestPage.cpp" compile="1" resource="0" file="Source/TestPage.cpp"/>
