@@ -40,6 +40,12 @@
       </GROUP>
     </GROUP>
     <GROUP id="{2156CA2B-72B1-D5CD-005E-9718D619F5B0}" name="Source">
+      <GROUP id="{9EB8105E-1F84-991A-30FD-9BB8374D54EF}" name="GUI">
+        <FILE id="KAJVus" name="HoverDetailsComponent.cpp" compile="1" resource="0"
+              file="Source/GUI/HoverDetailsComponent.cpp"/>
+        <FILE id="sitsbO" name="HoverDetailsComponent.h" compile="0" resource="0"
+              file="Source/GUI/HoverDetailsComponent.h"/>
+      </GROUP>
       <FILE id="ZlwUns" name="CustomOcp1Message.cpp" compile="1" resource="0"
             file="Source/CustomOcp1Message.cpp"/>
       <FILE id="RusS1U" name="CustomOcp1Message.h" compile="0" resource="0"
