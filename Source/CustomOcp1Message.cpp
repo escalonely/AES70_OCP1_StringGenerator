@@ -1,7 +1,7 @@
 /*
 ===============================================================================
 
- Copyright (C) 2024 Bernardo Escalona. All Rights Reserved.
+ Copyright (C) 2025 Bernardo Escalona. All Rights Reserved.
 
   This file is part of AES70_OCP1_StringGenerator, found at:
   https://github.com/escalonely/AES70_OCP1_StringGenerator
@@ -26,15 +26,20 @@
 
 
 CustomOcp1CommandResponseRequired::CustomOcp1CommandResponseRequired(const NanoOcp1::Ocp1CommandDefinition& def,
-                                                                     std::uint32_t& handle)
-    : Ocp1CommandResponseRequired(def, handle)
+                                                                     std::uint32_t& handle,
+                                                                     bool useFieldCodes)
+    :   Ocp1CommandResponseRequired(def, handle),
+        m_useFieldCodes(useFieldCodes)
 {
 }
 
 std::vector<std::uint8_t> CustomOcp1CommandResponseRequired::GetSerializedData()
 {
-    std::vector<std::uint8_t> serializedData = GetDummyHeaderSerializedData();
+    // If m_useFieldCodes is false we simply call the base implementation.
+    if (!m_useFieldCodes)
+        return NanoOcp1::Ocp1CommandResponseRequired::GetSerializedData();
 
+    std::vector<std::uint8_t> serializedData = GetHeaderFieldCodeData();
     serializedData.push_back(Char_Cmd_Size);
     serializedData.push_back(Char_Cmd_Size);
     serializedData.push_back(Char_Cmd_Size);
@@ -60,7 +65,7 @@ std::vector<std::uint8_t> CustomOcp1CommandResponseRequired::GetSerializedData()
     return serializedData;
 }
 
-std::vector<std::uint8_t> CustomOcp1CommandResponseRequired::GetDummyHeaderSerializedData() const
+std::vector<std::uint8_t> CustomOcp1CommandResponseRequired::GetHeaderFieldCodeData() const
 {
     return 
     {

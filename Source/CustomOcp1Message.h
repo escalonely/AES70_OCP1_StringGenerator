@@ -1,7 +1,7 @@
 /*
 ===============================================================================
 
- Copyright (C) 2024 Bernardo Escalona. All Rights Reserved.
+ Copyright (C) 2025 Bernardo Escalona. All Rights Reserved.
 
   This file is part of AES70_OCP1_StringGenerator, found at:
   https://github.com/escalonely/AES70_OCP1_StringGenerator
@@ -27,12 +27,13 @@
 #include <Ocp1Message.h>
 
 
+// Definition of field codes which are used instead of field values.
+
 static constexpr std::uint8_t Char_Hdr_SyncVal = static_cast<std::uint8_t>('3');
 static constexpr std::uint8_t Char_Hdr_ProtoVers = static_cast<std::uint8_t>('V');
 static constexpr std::uint8_t Char_Hdr_MessageSize = static_cast<std::uint8_t>('S');
 static constexpr std::uint8_t Char_Hdr_MessageType = static_cast<std::uint8_t>('T');
 static constexpr std::uint8_t Char_Hdr_MessageCount = static_cast<std::uint8_t>('C');
-
 static constexpr std::uint8_t Char_Cmd_Size = static_cast<std::uint8_t>('s');
 static constexpr std::uint8_t Char_Cmd_Handle = static_cast<std::uint8_t>('h');
 static constexpr std::uint8_t Char_Cmd_ONo = static_cast<std::uint8_t>('o');
@@ -50,21 +51,32 @@ class CustomOcp1CommandResponseRequired : public NanoOcp1::Ocp1CommandResponseRe
 public:
     /**
      * Class constructor that takes parameters via a Ocp1CommandDefinition struct.
+     * 
+     * @param[in] useFieldCodes Set to True to have GetSerializedData fill the PDU with 
+     * field codes instead of the field values as in the base class implementation.
      */
     CustomOcp1CommandResponseRequired(const NanoOcp1::Ocp1CommandDefinition& def,
-                                      std::uint32_t& handle);
+                                      std::uint32_t& handle,
+                                      bool useFieldCodes = false);
 
     /**
-     * Reimplemented from Ocp1Message to write a byte verctor containing ASCII codes 
-     * to represent the OCP1 fields instead of actual data.
+     * Reimplemented from Ocp1Message to write a byte vector containing field codes 
+     * to represent the OCP1 fields instead of the message's actual data.
      */
     std::vector<std::uint8_t> GetSerializedData() override;
 
 
 protected:
     /**
-     * Returns a byte verctor containing ASCII codes to represent the fields 
-     * in an OCP1 header instead of actual data.
+     * Returns a byte vector containing field codes to represent the fields 
+     * in an OCP1 header instead of the header's actual data.
      */
-    std::vector<std::uint8_t> GetDummyHeaderSerializedData() const;
+    std::vector<std::uint8_t> GetHeaderFieldCodeData() const;
+
+
+private:
+    /**
+     * If true, GetSerializedData will write field codes instead of field values.
+     */
+    bool m_useFieldCodes;
 };
