@@ -1,7 +1,7 @@
 /*
 ===============================================================================
 
- Copyright (C) 2023 Bernardo Escalona. All Rights Reserved.
+ Copyright (C) 2025 Bernardo Escalona. All Rights Reserved.
 
   This file is part of AES70_OCP1_StringGenerator, found at:
   https://github.com/escalonely/AES70_OCP1_StringGenerator
@@ -26,8 +26,11 @@
 #include "MainTabbedComponent.h"
 #include "Common.h"
 #include "AES70.h"
+#include "CustomOcp1Message.h"
 #include <Ocp1DataTypes.h>
 #include <Ocp1Message.h>
+#include "GUI/HoverDetailsComponent.h"
+
 
 
 /**
@@ -120,7 +123,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
         m_ocaCommandComboBox(juce::ComboBox("OCA Command Idx")),
         m_ocaCommandDefLevelComboBox(juce::ComboBox("OCA Command DefLevel")),
         m_ocaCommandHandleTextEditor(juce::TextEditor("OCA Command Handle")),
-        m_ocaCommandTextEditor(juce::TextEditor("OCA Command String")),
+        m_ocaCommandDetailsComponent(std::make_unique<HoverDetailsComponent>("OCA Command String")),
         m_ocaResponseStatusComboBox(juce::ComboBox("OCA Response Status")),
         m_ocaResponseTextEditor(juce::TextEditor("OCA Response String")),
         m_ocaNotificationTextEditor(juce::TextEditor("OCA Notification String")),
@@ -138,7 +141,7 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     m_container.addAndMakeVisible(&m_ocaCommandComboBox);
     m_container.addAndMakeVisible(&m_ocaCommandDefLevelComboBox);
     m_container.addAndMakeVisible(&m_ocaCommandHandleTextEditor);
-    m_container.addAndMakeVisible(&m_ocaCommandTextEditor);
+    m_container.addAndMakeVisible(m_ocaCommandDetailsComponent.get());
     m_container.addAndMakeVisible(&m_sendButton);
     m_container.addAndMakeVisible(&m_ocaResponseStatusComboBox);
     m_container.addAndMakeVisible(&m_ocaResponseTextEditor);
@@ -164,11 +167,12 @@ StringGeneratorPage::StringGeneratorPage(MainTabbedComponent* const parent)
     m_ocaCommandHandleTextEditor.setJustification(juce::Justification(juce::Justification::centredRight));
     m_ocaCommandHandleTextEditor.setText("1", false);
     
-    m_ocaCommandTextEditor.setHasFocusOutline(true);
-    m_ocaCommandTextEditor.setReadOnly(true);
-    m_ocaCommandTextEditor.setCaretVisible(false);
-    m_ocaCommandTextEditor.setMultiLine(true, true);
-    m_ocaCommandTextEditor.setTextToShowWhenEmpty("This field will show the specified Command string "
+    m_ocaCommandDetailsComponent->m_editor.setHasFocusOutline(true);
+    m_ocaCommandDetailsComponent->m_editor.setReadOnly(true);
+    m_ocaCommandDetailsComponent->m_editor.setCaretVisible(false);
+    m_ocaCommandDetailsComponent->m_editor.setColour(juce::TextEditor::highlightColourId, juce::Colours::red);
+    m_ocaCommandDetailsComponent->m_editor.setMultiLine(true, true);
+    m_ocaCommandDetailsComponent->m_editor.setTextToShowWhenEmpty("This field will show the specified Command string "
         "which can be transmitted to a device.", 
         LabelEnabledTextColour);
 
@@ -642,7 +646,7 @@ void StringGeneratorPage::UpdateConnectionStatus(ConnectionStatus status)
     switch (status)
     {
         case ConnectionStatus::Online:
-            testButtonEnabled = !m_ocaCommandTextEditor.isEmpty();
+            testButtonEnabled = !m_ocaCommandDetailsComponent->m_editor.isEmpty();
             break;
 
         case ConnectionStatus::Offline:
@@ -659,7 +663,7 @@ void StringGeneratorPage::ResetComponents(int step)
     DBG("ResetComponents step " + juce::String(step));
 
     bool resizeNeeded(false);
-    m_ocaCommandTextEditor.clear();
+    m_ocaCommandDetailsComponent->m_editor.clear();
     m_ocaResponseTextEditor.clear();
     m_sendButton.setEnabled(false);
     if (step < WORKFLOW_STEP_ENTER_SET_VALUE)
@@ -807,7 +811,7 @@ void StringGeneratorPage::UpdateBinaryStrings()
     juce::MemoryBlock commandMemBlock;
     juce::MemoryBlock responseMemBlock;
     juce::MemoryBlock notificationMemBlock;
-    CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock);
+    CreateBinaryStrings(commandMemBlock, responseMemBlock, notificationMemBlock, false /* no codes */);
 
     // Convert juce::MemoryBlock to juce::String
     // TODO: add support for user-defined byte-separators
@@ -815,9 +819,16 @@ void StringGeneratorPage::UpdateBinaryStrings()
     juce::String responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
     juce::String notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
 
-    m_ocaCommandTextEditor.setText(commandString, false);
+    m_ocaCommandDetailsComponent->m_editor.setText(commandString, false);
     m_ocaResponseTextEditor.setText(responseString, false);
     m_ocaNotificationTextEditor.setText(notificationString, false);
+
+    juce::MemoryBlock commandFieldCodeMemBlock;
+    juce::MemoryBlock responseFieldCodeMemBlock;
+    juce::MemoryBlock notificationFieldCodeMemBlock;
+    CreateBinaryStrings(commandFieldCodeMemBlock, responseFieldCodeMemBlock, notificationFieldCodeMemBlock, true);
+    m_ocaCommandDetailsComponent->SetFieldCodeData(commandFieldCodeMemBlock);
+    jassert(commandMemBlock.getSize() == commandFieldCodeMemBlock.getSize());
 
     // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.
     switch (GetMainComponent()->GetConnectionStatus())
@@ -833,7 +844,10 @@ void StringGeneratorPage::UpdateBinaryStrings()
     }
 }
 
-bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock)
+bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, 
+                                              juce::MemoryBlock& responseMemBlock, 
+                                              juce::MemoryBlock& notificationMemBlock,
+                                              bool useFieldCodes)
 {
     int propIdx = m_ocaPropertyComboBox.getSelectedId();
     int methodIdx = m_ocaCommandComboBox.getSelectedId();
@@ -933,7 +947,7 @@ bool StringGeneratorPage::CreateBinaryStrings(juce::MemoryBlock& commandMemBlock
     }
 
     std::uint32_t dummyHandle; // Auto-generated by Ocp1CommandResponseRequired, will be thrown away.
-    NanoOcp1::Ocp1CommandResponseRequired ocp1Command(commandDefinition, dummyHandle);
+    CustomOcp1CommandResponseRequired ocp1Command(commandDefinition, dummyHandle, useFieldCodes);
 
     // Replace the auto-generated handle with the user-defined one.
     std::uint32_t userHandle(static_cast<std::uint32_t>(m_ocaCommandHandleTextEditor.getText().getIntValue()));
@@ -1029,7 +1043,7 @@ void StringGeneratorPage::resized()
     // Row 7
     rowBounds = bounds.removeFromTop(static_cast<int>(controlHeight * 1.5f));
     m_sendButton.setBounds(rowBounds.removeFromRight(static_cast<int>(comboBoxWidth * 0.5f)).reduced(margin));
-    m_ocaCommandTextEditor.setBounds(rowBounds.reduced(margin));
+    m_ocaCommandDetailsComponent->setBounds(rowBounds.reduced(margin));
 
     // Vertical spacer
     bounds.removeFromTop(controlHeight / 2); 

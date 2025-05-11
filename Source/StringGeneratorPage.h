@@ -1,7 +1,7 @@
 /*
 ===============================================================================
 
- Copyright (C) 2023 Bernardo Escalona. All Rights Reserved.
+ Copyright (C) 2025 Bernardo Escalona. All Rights Reserved.
 
   This file is part of AES70_OCP1_StringGenerator, found at:
   https://github.com/escalonely/AES70_OCP1_StringGenerator
@@ -36,7 +36,7 @@ namespace AES70
     struct Property;
     struct OcaRoot;
 }
-
+class HoverDetailsComponent;
 
 /**
  * Component for configuring and generating OCP.1 binary strings.
@@ -107,9 +107,13 @@ protected:
      * @parameter[out] responseMemBlock     The resulting Response binary string as a juce::MemoryBlock.
      * @parameter[out] notificationMemBlock The Notification binary string that would result from a PropertyChanged event in the device, 
      *                                      as a juce::MemoryBlock. Will only be non-empty if the AddSubscription command is selected.
+     * @parameter[in] useFieldCodes         Set to True to generate the PDUs using field codes instead of field values.
      * @return  True if all strings could be generated successfully.
      */
-    bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, juce::MemoryBlock& responseMemBlock, juce::MemoryBlock& notificationMemBlock);
+    bool CreateBinaryStrings(juce::MemoryBlock& commandMemBlock, 
+                             juce::MemoryBlock& responseMemBlock, 
+                             juce::MemoryBlock& notificationMemBlockx,
+                             bool useFieldCodes = false);
 
     /**
      * Helper method to select a given option of a ComboBox.
@@ -182,8 +186,8 @@ private:
     // TextEditor to set the handle of the AES70/OCA Command to send
     juce::TextEditor m_ocaCommandHandleTextEditor;
 
-    // TextEditor to display the AES70/OCA Command to send
-    juce::TextEditor m_ocaCommandTextEditor;
+    // Custom Component to display the AES70/OCA Command to send
+    std::unique_ptr<HoverDetailsComponent> m_ocaCommandDetailsComponent;
 
     // Button to test / send the command string to the device using m_nanoOcp1Client.
     juce::TextButton m_sendButton;
