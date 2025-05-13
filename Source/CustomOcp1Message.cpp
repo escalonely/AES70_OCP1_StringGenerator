@@ -25,6 +25,70 @@
 #include "CustomOcp1Message.h"
 
 
+juce::String FieldPrefixString(FieldCode f)
+{
+    switch (f)
+    {
+        case Char_Hdr_SyncVal:
+        case Char_Hdr_ProtoVers:
+        case Char_Hdr_MessageSize:
+        case Char_Hdr_MessageType:
+        case Char_Hdr_MessageCount:
+            return "Header";
+        case Char_Cmd_Size:
+        case Char_Cmd_Handle:
+        case Char_Cmd_ONo:
+        case Char_Cmd_MethodDefLevel:
+        case Char_Cmd_MethodIndex:
+        case Char_Cmd_ParamCount:
+        case Char_Cmd_ParamData:
+            return "Command";
+        default:
+            break;
+    }
+
+    return "?";
+}
+
+juce::String FieldNameString(FieldCode f)
+{
+    switch (f)
+    {
+        case Char_Hdr_SyncVal:
+            return "SyncByte";
+        case Char_Hdr_ProtoVers:
+            return "ProtocolVersion";
+        case Char_Hdr_MessageSize:
+            return "MessageSize";
+        case Char_Hdr_MessageType:
+            return "MessageType";
+        case Char_Hdr_MessageCount:
+            return "MessageCount";
+        case Char_Cmd_Size:
+            return "Size";
+        case Char_Cmd_Handle:
+            return "Handle";
+        case Char_Cmd_ONo:
+            return "ONo";
+        case Char_Cmd_MethodDefLevel:
+            return "MethodDefLevel";
+        case Char_Cmd_MethodIndex:
+            return "MethodCount";
+        case Char_Cmd_ParamCount:
+            return "ParameterCount";
+        case Char_Cmd_ParamData:
+            return "ParameterData";
+        default:
+            break;
+    }
+
+    return "?";
+}
+
+/**
+ * CustomOcp1CommandResponseRequired implementation
+ */
+
 CustomOcp1CommandResponseRequired::CustomOcp1CommandResponseRequired(const NanoOcp1::Ocp1CommandDefinition& def,
                                                                      std::uint32_t& handle,
                                                                      bool useFieldCodes)

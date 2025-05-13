@@ -28,20 +28,29 @@
 
 
 // Definition of field codes which are used instead of field values.
+using FieldCode = std::uint8_t;
+static constexpr FieldCode Char_Hdr_SyncVal = static_cast<std::uint8_t>('3');
+static constexpr FieldCode Char_Hdr_ProtoVers = static_cast<std::uint8_t>('V');
+static constexpr FieldCode Char_Hdr_MessageSize = static_cast<std::uint8_t>('S');
+static constexpr FieldCode Char_Hdr_MessageType = static_cast<std::uint8_t>('T');
+static constexpr FieldCode Char_Hdr_MessageCount = static_cast<std::uint8_t>('C');
+static constexpr FieldCode Char_Cmd_Size = static_cast<std::uint8_t>('s');
+static constexpr FieldCode Char_Cmd_Handle = static_cast<std::uint8_t>('h');
+static constexpr FieldCode Char_Cmd_ONo = static_cast<std::uint8_t>('o');
+static constexpr FieldCode Char_Cmd_MethodDefLevel = static_cast<std::uint8_t>('l');
+static constexpr FieldCode Char_Cmd_MethodIndex = static_cast<std::uint8_t>('i');
+static constexpr FieldCode Char_Cmd_ParamCount = static_cast<std::uint8_t>('c');
+static constexpr FieldCode Char_Cmd_ParamData = static_cast<std::uint8_t>('d');
 
-static constexpr std::uint8_t Char_Hdr_SyncVal = static_cast<std::uint8_t>('3');
-static constexpr std::uint8_t Char_Hdr_ProtoVers = static_cast<std::uint8_t>('V');
-static constexpr std::uint8_t Char_Hdr_MessageSize = static_cast<std::uint8_t>('S');
-static constexpr std::uint8_t Char_Hdr_MessageType = static_cast<std::uint8_t>('T');
-static constexpr std::uint8_t Char_Hdr_MessageCount = static_cast<std::uint8_t>('C');
-static constexpr std::uint8_t Char_Cmd_Size = static_cast<std::uint8_t>('s');
-static constexpr std::uint8_t Char_Cmd_Handle = static_cast<std::uint8_t>('h');
-static constexpr std::uint8_t Char_Cmd_ONo = static_cast<std::uint8_t>('o');
-static constexpr std::uint8_t Char_Cmd_MethodDefLevel = static_cast<std::uint8_t>('l');
-static constexpr std::uint8_t Char_Cmd_MethodIndex = static_cast<std::uint8_t>('i');
-static constexpr std::uint8_t Char_Cmd_ParamCount = static_cast<std::uint8_t>('c');
-static constexpr std::uint8_t Char_Cmd_ParamData = static_cast<std::uint8_t>('d');
+/**
+ * // TODO: doc
+ */
+juce::String FieldPrefixString(FieldCode f);
 
+/**
+ * // TODO: doc
+ */
+juce::String FieldNameString(FieldCode f);
 
 /**
  * Subclass of NanoOcp1::Ocp1CommandResponseRequired with custom GetSerializedData implementation.
