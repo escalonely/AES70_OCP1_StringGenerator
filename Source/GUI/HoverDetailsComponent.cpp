@@ -23,6 +23,20 @@
 */
 
 #include "HoverDetailsComponent.h"
+#include "../CustomOcp1Message.h"
+
+
+// ---- HoverSensitiveTextEditor ---- //
+
+juce::String Details::ToString() const
+{
+    juce::String ret = FieldPrefixString(m_fieldType) + "." +
+                       FieldNameString(m_fieldType) + "\n" +
+                       "Length: " +
+                       juce::String(m_position.getLength() + 1);
+
+    return ret;
+}
 
 
 // ---- HoverSensitiveTextEditor ---- //
@@ -30,7 +44,7 @@
 HoverSensitiveTextEditor::HoverSensitiveTextEditor(HoverDetailsComponent& parent)
     :   juce::TextEditor(),
         m_parent(parent),
-         m_nearestCharIdx(-1)
+        m_nearestCharIdx(-1)
 {
 
 }
@@ -52,6 +66,8 @@ void HoverSensitiveTextEditor::mouseEnter(const MouseEvent& event)
 void HoverSensitiveTextEditor::mouseExit(const MouseEvent& event)
 {
     UpdateDetails(event);
+    //m_nearestCharIdx = -1;
+    //setHighlightedRegion({ 0, 0 });
 
     return juce::TextEditor::mouseExit(event);
 }
@@ -65,7 +81,7 @@ void HoverSensitiveTextEditor::UpdateDetails(const MouseEvent& event)
     // If mouse is not hovering over any of the text inside the TextEditor, nothing to do.
     auto textRectList = getTextBounds(juce::Range<int>(0, getText().length()));
     if (!textRectList.containsPoint(event.getPosition()))
-        return;
+        return; // TODO: clear!
 
     // No change
     auto nearestCharIdx = getCharIndexForPoint(event.getPosition());
@@ -78,10 +94,11 @@ void HoverSensitiveTextEditor::UpdateDetails(const MouseEvent& event)
 
     auto details = m_parent.DisplayDetailsAt(bytePos);
 
-    DBG(juce::String(": m_nearestCharIdx=") + juce::String(m_nearestCharIdx) + 
-        ", bytePos=" + juce::String(bytePos) + 
-        ", fieldType=" + juce::String(details.m_fieldType));
+    //DBG(juce::String(": m_nearestCharIdx=") + juce::String(m_nearestCharIdx) + 
+    //    ", bytePos=" + juce::String(bytePos) + 
+    //    ", fieldType=" + juce::String(details.m_fieldType));
 
+    // TODO: move to helper, use also to clear
     // Determine the text region to highlight.
     int startHl = details.m_position.getStart() * 3;
     int stopHl = details.m_position.getEnd() * 3 + 2;
@@ -104,7 +121,7 @@ DetailsDisplay::DetailsDisplay(HoverDetailsComponent& parent)
 
 void DetailsDisplay::SetDetails(const Details& d)
 {
-    setText("Field: " + juce::String::charToString(d.m_fieldType));
+    setText(d.ToString());
 }
 
 
@@ -147,7 +164,7 @@ void HoverDetailsComponent::resized()
 {
     auto bounds = getLocalBounds();
     //auto controlHeight = bounds.getHeight();
-    auto editorWidth = int(bounds.getWidth() * 0.8);
+    auto editorWidth = int(bounds.getWidth() * 0.771);
     auto margin = 2;
 
     auto editorBounds = bounds.removeFromRight(editorWidth + margin);

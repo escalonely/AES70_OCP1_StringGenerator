@@ -45,8 +45,12 @@ struct Details
 
     /**
      * Type of field. See field codes defined in CustomOcp1Message.h. 
+     * // TODO: use FieldCode
      */
     std::uint8_t m_fieldType;
+
+    // TODO: dec
+    juce::String ToString() const;
 };
 
 
