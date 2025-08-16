@@ -154,6 +154,11 @@ public:
     Details DisplayDetailsAt(int position);
 
     /**
+     * Clears m_display.
+     */
+    void ClearDetails();
+
+    /**
      * TextEditor sensitive to hovering with the mouse.
      */
     HoverSensitiveTextEditor m_editor;

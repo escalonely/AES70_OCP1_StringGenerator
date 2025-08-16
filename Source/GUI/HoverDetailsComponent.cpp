@@ -81,7 +81,11 @@ void HoverSensitiveTextEditor::UpdateDetails(const MouseEvent& event)
     // If mouse is not hovering over any of the text inside the TextEditor, nothing to do.
     auto textRectList = getTextBounds(juce::Range<int>(0, getText().length()));
     if (!textRectList.containsPoint(event.getPosition()))
-        return; // TODO: clear!
+    {
+        //DBG("UpdateDetails: clearing details.");
+        m_parent.ClearDetails();
+        return; 
+    }
 
     // No change
     auto nearestCharIdx = getCharIndexForPoint(event.getPosition());
@@ -140,7 +144,11 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
 {
     Details ret;
     if ((position < 0) || (position >= m_fieldCodeData.getSize()))
+    {
+        DBG("DisplayDetailsAt: out of bounds -> clearing.");
+        m_display.clear();
         return ret;
+    }
 
     // Walk m_fieldCodeData in both directions in order to find the range of the field at position.
     auto fieldType = m_fieldCodeData[position];
@@ -158,6 +166,11 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
     m_display.SetDetails(ret);
 
     return ret;
+}
+
+void HoverDetailsComponent::ClearDetails()
+{
+    m_display.clear();
 }
 
 void HoverDetailsComponent::resized()
