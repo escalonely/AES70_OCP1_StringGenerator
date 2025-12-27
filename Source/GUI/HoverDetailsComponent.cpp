@@ -83,6 +83,7 @@ void HoverSensitiveTextEditor::UpdateDetails(const MouseEvent& event)
     if (!textRectList.containsPoint(event.getPosition()))
     {
         //DBG("UpdateDetails: clearing details.");
+        setHighlightedRegion({ 0, 0 });
         m_parent.ClearDetails();
         return; 
     }
