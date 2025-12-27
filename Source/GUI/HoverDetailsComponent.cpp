@@ -138,7 +138,10 @@ HoverDetailsComponent::HoverDetailsComponent(const String& componentName)
         m_display(DetailsDisplay(*this))
 {
     addAndMakeVisible(m_editor);
-    addAndMakeVisible(m_display);
+    addChildComponent(m_display);
+
+    // TODO: setting below does not combine well with setVisible
+    setPaintingIsUnclipped(true); // To allow m_display to be drawn outside bounds.
 }
 
 Details HoverDetailsComponent::DisplayDetailsAt(int position)
@@ -147,7 +150,7 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
     if ((position < 0) || (position >= m_fieldCodeData.getSize()))
     {
         DBG("DisplayDetailsAt: out of bounds -> clearing.");
-        m_display.clear();
+        ClearDetails();
         return ret;
     }
 
@@ -164,6 +167,7 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
     ret.m_position.setEnd(end);
     ret.m_fieldType = fieldType;
 
+    m_display.setVisible(true);
     m_display.SetDetails(ret);
 
     return ret;
@@ -172,16 +176,19 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
 void HoverDetailsComponent::ClearDetails()
 {
     m_display.clear();
+    m_display.setVisible(false);
 }
 
 void HoverDetailsComponent::resized()
 {
     auto bounds = getLocalBounds();
-    //auto controlHeight = bounds.getHeight();
-    auto editorWidth = int(bounds.getWidth() * 0.771);
     auto margin = 2;
 
-    auto editorBounds = bounds.removeFromRight(editorWidth + margin);
-    m_editor.setBounds(editorBounds.reduced(margin));
-    m_display.setBounds(bounds.reduced(margin));
+    auto editorBounds = bounds.reduced(margin);
+    auto detailsHeight = juce::jmax(32, juce::roundToInt(m_display.getTextHeight() * 3.0f));
+    auto displayBounds = editorBounds.withY(editorBounds.getBottom() / 2)
+                                     .withHeight(detailsHeight);
+
+    m_editor.setBounds(editorBounds);
+    m_display.setBounds(displayBounds);
 }
