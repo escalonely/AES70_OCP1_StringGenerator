@@ -815,11 +815,9 @@ void StringGeneratorPage::UpdateBinaryStrings()
 
     // Convert juce::MemoryBlock to juce::String
     // TODO: add support for user-defined byte-separators
-    juce::String commandString = juce::String::toHexString(commandMemBlock.getData(), static_cast<int>(commandMemBlock.getSize()));
     juce::String responseString = juce::String::toHexString(responseMemBlock.getData(), static_cast<int>(responseMemBlock.getSize()));
     juce::String notificationString = juce::String::toHexString(notificationMemBlock.getData(), static_cast<int>(notificationMemBlock.getSize()));
 
-    m_ocaCommandDetailsComponent->m_editor.setText(commandString, false);
     m_ocaResponseTextEditor.setText(responseString, false);
     m_ocaNotificationTextEditor.setText(notificationString, false);
 
@@ -827,7 +825,7 @@ void StringGeneratorPage::UpdateBinaryStrings()
     juce::MemoryBlock responseFieldCodeMemBlock;
     juce::MemoryBlock notificationFieldCodeMemBlock;
     CreateBinaryStrings(commandFieldCodeMemBlock, responseFieldCodeMemBlock, notificationFieldCodeMemBlock, true);
-    m_ocaCommandDetailsComponent->SetFieldCodeData(commandFieldCodeMemBlock);
+    m_ocaCommandDetailsComponent->SetData(commandMemBlock, commandFieldCodeMemBlock);
     jassert(commandMemBlock.getSize() == commandFieldCodeMemBlock.getSize());
 
     // If NanoOcpClient is Online and there is an OCP.1 command to send, enable m_sendButton.

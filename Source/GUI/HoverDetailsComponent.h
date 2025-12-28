@@ -25,6 +25,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../CustomOcp1Message.h"
 
 
 // Forward declarations.
@@ -39,18 +40,26 @@ class HoverDetailsComponent;
 struct Details
 {
     /**
+     * Converts the Details to a human-readable string.
+     * 
+     * @return  Human-readable string representation of the Details.
+     */
+    juce::String ToString() const;
+
+    /**
      * Start and end position of the featured field, in bytes.
      */
     juce::Range<int> m_position = juce::Range<int>(0, 0);
 
     /**
      * Type of field. See field codes defined in CustomOcp1Message.h. 
-     * // TODO: use FieldCode
      */
-    std::uint8_t m_fieldType;
+    FieldCode m_fieldType;
 
-    // TODO: dec
-    juce::String ToString() const;
+    /**
+     * Value of the field as a Variant.
+     */
+    NanoOcp1::Variant m_fieldValue;
 };
 
 
@@ -133,16 +142,13 @@ public:
     HoverDetailsComponent(const String& componentName);
 
     /**
-     * Sets the "field code" representation of the same PDU currently 
-     * displayed by m_editor.
-     * 
-     * @param[in] fieldCodeData MamoryBlock containing the field code representation 
-     *                          of the PDU.
+     * Sets the PDU data to be displayed in as text in m_editor and the field code data to be used
+     * for determining the details of the PDU fields shown in m_display.
+     *
+     * @param[in] pduData       MemoryBlock containing the raw PDU data.
+     * @param[in] fieldCodeData MemoryBlock containing the field code representation of the PDU.
      */
-    void SetFieldCodeData(const juce::MemoryBlock& fieldCodeData)
-    {
-        m_fieldCodeData = fieldCodeData;
-    }
+    void SetData(const juce::MemoryBlock& pduData, const juce::MemoryBlock& fieldCodeData);
 
     /**
      * Determines the Details about the PDU field at the given position in bytes,
@@ -173,6 +179,11 @@ protected:
     void resized() override;
 
 private:
+    /**
+     * Buffer containing the raw PDU data displayed by m_editor.
+     */
+    juce::MemoryBlock m_pduData;
+
     /**
      * Buffer which always holds the same PDU as m_editor, but in "field code"
      * representation. See field codes defined in CustomOcp1Message.h

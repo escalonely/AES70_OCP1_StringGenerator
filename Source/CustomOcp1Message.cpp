@@ -73,7 +73,7 @@ juce::String FieldNameString(FieldCode f)
         case Char_Cmd_MethodDefLevel:
             return "MethodDefLevel";
         case Char_Cmd_MethodIndex:
-            return "MethodCount";
+            return "MethodIndex";
         case Char_Cmd_ParamCount:
             return "ParameterCount";
         case Char_Cmd_ParamData:

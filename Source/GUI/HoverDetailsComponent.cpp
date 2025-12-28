@@ -32,8 +32,8 @@ juce::String Details::ToString() const
 {
     juce::String ret = FieldPrefixString(m_fieldType) + "." +
                        FieldNameString(m_fieldType) + "\n" +
-                       "Length: " +
-                       juce::String(m_position.getLength() + 1);
+                       "Length: " + juce::String(m_position.getLength() + 1) + "\n" +
+                       "Value: " + m_fieldValue.ToString();
 
     return ret;
 }
@@ -144,6 +144,16 @@ HoverDetailsComponent::HoverDetailsComponent(const String& componentName)
     setPaintingIsUnclipped(true); // To allow m_display to be drawn outside bounds.
 }
 
+void HoverDetailsComponent::SetData(const juce::MemoryBlock& pduData, const juce::MemoryBlock& fieldCodeData)
+{
+    m_pduData = pduData;
+    m_fieldCodeData = fieldCodeData;
+
+    // Convert PDU data to hex string representation for display.
+    juce::String commandString = juce::String::toHexString(pduData.getData(), static_cast<int>(pduData.getSize()));
+    m_editor.setText(commandString, false);
+}
+
 Details HoverDetailsComponent::DisplayDetailsAt(int position)
 {
     Details ret;
@@ -167,6 +177,58 @@ Details HoverDetailsComponent::DisplayDetailsAt(int position)
     ret.m_position.setEnd(end);
     ret.m_fieldType = fieldType;
 
+
+    // Extract field value from m_pduData.
+    std::vector<std::uint8_t> parameterData = std::vector<std::uint8_t>(
+        static_cast<std::uint8_t*> (m_pduData.getData()) + start,
+        static_cast<std::uint8_t*> (m_pduData.getData()) + end + 1
+    );
+
+    bool ok = false;
+    switch(fieldType)
+    {
+        // 1-byte fields
+        case Char_Hdr_SyncVal:
+        case Char_Cmd_ParamCount:
+        case Char_Hdr_MessageType:
+        {
+            auto intValue = NanoOcp1::DataToUint8(parameterData, &ok);
+            ret.m_fieldValue = NanoOcp1::Variant(intValue);
+            break;
+        }
+
+        // 2-byte fields
+        case Char_Hdr_ProtoVers:
+        case Char_Hdr_MessageCount:
+        case Char_Cmd_MethodDefLevel:
+        case Char_Cmd_MethodIndex:
+        {
+            auto intValue = NanoOcp1::DataToUint16(parameterData, &ok);
+            ret.m_fieldValue = NanoOcp1::Variant(intValue);
+            break;
+        }
+
+        // 4-byte fields
+        case Char_Hdr_MessageSize:
+        case Char_Cmd_Size:
+        case Char_Cmd_Handle:
+        case Char_Cmd_ONo:
+        {
+            auto intValue = NanoOcp1::DataToUint32(parameterData, &ok);
+            ret.m_fieldValue = NanoOcp1::Variant(intValue);
+            break;
+        }
+
+        case Char_Cmd_ParamData:
+        {
+            ok = true;
+            ret.m_fieldValue = NanoOcp1::Variant(parameterData /*, NanoOcp1::OCP1DATATYPE_STRING*/);
+            break;
+        }
+        break;
+    }
+
+    jassert(ok);
     m_display.setVisible(true);
     m_display.SetDetails(ret);
 
@@ -185,10 +247,9 @@ void HoverDetailsComponent::resized()
     auto margin = 2;
 
     auto editorBounds = bounds.reduced(margin);
-    auto detailsHeight = juce::jmax(32, juce::roundToInt(m_display.getTextHeight() * 3.0f));
-    auto displayBounds = editorBounds.withY(editorBounds.getBottom() / 2)
-                                     .withHeight(detailsHeight);
-
     m_editor.setBounds(editorBounds);
+
+    //auto detailsHeight = juce::jmax(32, juce::roundToInt(m_display.getTextHeight() * 3.0f));
+    auto displayBounds = editorBounds.removeFromRight(static_cast<int>(bounds.getWidth() * 0.4f)).reduced(margin);
     m_display.setBounds(displayBounds);
 }
