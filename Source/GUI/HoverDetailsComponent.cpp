@@ -24,16 +24,37 @@
 
 #include "HoverDetailsComponent.h"
 #include "../CustomOcp1Message.h"
+#include <Ocp1Message.h>
 
 
 // ---- HoverSensitiveTextEditor ---- //
 
 juce::String Details::ToString() const
 {
+    juce::String extra;
+    switch(m_fieldType)
+    {
+        case Char_Hdr_MessageType:
+        {
+            switch (m_fieldValue.ToUInt8())
+            {
+                case NanoOcp1::Ocp1Message::Command: extra = " (Command)"; break;
+                case NanoOcp1::Ocp1Message::CommandResponseRequired: extra = " (CmdRspReq)"; break;
+                case NanoOcp1::Ocp1Message::Notification: extra = " (Notification)"; break;
+                case NanoOcp1::Ocp1Message::Response: extra = " (Response)"; break;
+                case NanoOcp1::Ocp1Message::KeepAlive: extra = " (KeepAlive)"; break;
+                default: break;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
     juce::String ret = FieldPrefixString(m_fieldType) + "." +
                        FieldNameString(m_fieldType) + "\n" +
                        "Length: " + juce::String(m_position.getLength() + 1) + "\n" +
-                       "Value: " + m_fieldValue.ToString();
+                       "Value: " + m_fieldValue.ToString() + extra;
 
     return ret;
 }
